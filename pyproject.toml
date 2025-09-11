@@ -1,9 +1,21 @@
 [project]
 name = "auramask"
 version = "0.1.0"
-description = "Add your description here"
+description = "Toolkit for the development of Adversarial Transformation Networks to sabotage algorithmic inference."
 readme = "README.md"
 requires-python = ">=3.10"
+license-files = ["LICENSE.md"]
+authors = [
+    { name="Jacob Logas", email="jacob@logas.me" }
+]
+maintainers = [
+    { name="Jacob Logas", email="jacob@logas.me" }
+]
+keywords = [
+    "keras",
+    "adversarial machine learning",
+    "toolkit",
+]
 dependencies = [
     "albumentations>=2.0.8",
     "datasets[vision]>=4.0.0",
