@@ -1,0 +1,49 @@
+[project]
+name = "auramask"
+version = "0.1.0"
+description = "Toolkit for the development of Adversarial Transformation Networks to sabotage algorithmic inference."
+readme = "README.md"
+requires-python = ">=3.10"
+license-files = ["LICENSE.md"]
+authors = [
+    { name="Jacob Logas", email="jacob@logas.me" }
+]
+maintainers = [
+    { name="Jacob Logas", email="jacob@logas.me" }
+]
+keywords = [
+    "keras",
+    "adversarial machine learning",
+    "toolkit",
+]
+dependencies = [
+    "albumentations>=2.0.8",
+    "datasets[vision]>=4.0.0",
+    "keras>=3.11.3",
+    "keras3-unets",
+    "numpy>=2.3.3",
+    "pilgram2>=2.0.8",
+    "softadapt>=0.1.2",
+    "wandb>=0.21.3",
+]
+
+[project.optional-dependencies]
+torch = [
+    "torch>=2.8.0",
+    "torchvision>=0.23.0",
+]
+tf = [
+    "tensorflow>=2.20.0",
+]
+
+[tool.uv.sources]
+keras3-unets = { git = "https://github.com/logasja/keras3-unets.git" }
+
+[dependency-groups]
+dev = [
+    "opencv-python>=4.11.0.86",
+    "pdoc3>=0.11.6",
+    "pre-commit>=4.3.0",
+    "ruff>=0.13.0",
+    "scikit-image>=0.25.2",
+]
