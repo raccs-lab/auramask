@@ -3,23 +3,15 @@ name = "auramask"
 version = "0.1.0"
 description = "Toolkit for the development of Adversarial Transformation Networks to sabotage algorithmic inference."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license-files = ["LICENSE.md"]
-authors = [
-    { name="Jacob Logas", email="jacob@logas.me" }
-]
-maintainers = [
-    { name="Jacob Logas", email="jacob@logas.me" }
-]
-keywords = [
-    "keras",
-    "adversarial machine learning",
-    "toolkit",
-]
+authors = [{ name = "Jacob Logas", email = "jacob@logas.me" }]
+maintainers = [{ name = "Jacob Logas", email = "jacob@logas.me" }]
+keywords = ["keras", "adversarial machine learning", "toolkit"]
 dependencies = [
     "albumentations>=2.0.8",
     "datasets[vision]>=4.0.0",
-    "keras>=3.11.3",
+    "keras>=3.0.0",
     "keras3-unets",
     "numpy>=2.3.3",
     "pilgram2>=2.0.8",
@@ -27,17 +19,60 @@ dependencies = [
     "wandb>=0.21.3",
 ]
 
-[project.optional-dependencies]
-torch = [
-    "torch>=2.8.0",
-    "torchvision>=0.23.0",
-]
-tf = [
-    "tensorflow>=2.20.0",
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::ImportWarning",
+    "ignore::RuntimeWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::FutureWarning",
+    "ignore::UserWarning",
+    # Ignore a spurious warning on tf-nightly related to save model changes.
+    "ignore:Custom mask layers require a config",
 ]
 
+[tool.coverage.run]
+relative_files = true
+omit = ["*/__version__.py", "*/__init__.py"]
+
+
+[tool.coverage.report]
+exclude_also = [
+    'def __repr__',
+    'if self.debug:',
+    'if settings.DEBUG',
+    'raise AssertionError',
+    'raise NotImplementedError',
+    'if 0:',
+    'if __name__ == .__main__.:',
+    'if TYPE_CHECKING:',
+    'class .*\bProtocol\):',
+    '@(abc\.)?abstractmethod',
+]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_scheme = "pep440"
+version_provider = "uv"
+update_changelog_on_bump = true
+major_version_zero = true
+gpg_sign = true
+version_files = ["src/auramask/__version__.py"]
+
 [tool.uv.sources]
+torch = [{ index = "pytorch", marker = "platform_system == 'Linux'" }]
 keras3-unets = { git = "https://github.com/logasja/keras3-unets.git" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[project.optional-dependencies]
+torch = ["torch>=2.8.0", "torchvision>=0.23.0"]
+tf = ["tensorflow>=2.20.0"]
 
 [dependency-groups]
 dev = [
@@ -46,4 +81,6 @@ dev = [
     "pre-commit>=4.3.0",
     "ruff>=0.13.0",
     "scikit-image>=0.25.2",
+    { include-group = "test" },
 ]
+test = ["pytest>=9.0.3"]
