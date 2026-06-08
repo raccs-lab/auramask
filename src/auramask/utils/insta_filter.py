@@ -1,7 +1,7 @@
 from enum import Enum
 import pilgram2 as pilgram
 from PIL.Image import Image
-from albumentations import clahe
+from albumentations import CLAHE
 from keras import utils
 
 
@@ -50,14 +50,9 @@ class InstaFilterEnum(Enum):
     def filter_transform(self, features: list[Image]):
         batch = {}
         fn = getattr(pilgram, self.name.lower())
+        clahe = CLAHE(clip_limit=1.0, tile_grid_size=(8, 8))
         batch["image"] = [
-            utils.array_to_img(
-                clahe(
-                    utils.img_to_array(f, dtype="uint8"),
-                    clip_limit=1.0,
-                    tile_grid_size=(8, 8),
-                )
-            )
+            utils.array_to_img(clahe(utils.img_to_array(f, dtype="uint8")))
             for f in features
             # autocontrast(f, preserve_tone=True) for f in features
         ]

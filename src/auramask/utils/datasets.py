@@ -2,12 +2,11 @@ from enum import Enum
 import os
 from typing import Callable, TypedDict
 from datasets import load_dataset, Dataset
-from torch import NoneType
 from auramask.utils import preprocessing
 from os import cpu_count
 from keras import utils, backend
 import numpy as np
-from albumentations import clahe
+from albumentations import CLAHE
 import PIL
 
 
@@ -67,7 +66,7 @@ class DatasetEnum(Enum):
             first = values[0]
             if isinstance(first, np.ndarray) and np.ndim(first) == 3:
                 batch[k] = np.array([loader(image=i)["image"] for i in values])
-            elif PIL.Image.isImageType(first):
+            elif isinstance(first, PIL.Image.Image):
                 batch[k] = np.stack(
                     [
                         loader(image=utils.img_to_array(v, dtype="uint8"))["image"]
@@ -117,7 +116,7 @@ class DatasetEnum(Enum):
         train_size: float | int | None,
         test_size: float | int | None,
         batch: int = 32,
-        prefilter: Callable | NoneType = None,
+        prefilter: Callable | None = None,
     ):
         ds = self.fetch_dataset().train_test_split(
             test_size=test_size, train_size=train_size
@@ -149,13 +148,10 @@ class DatasetEnum(Enum):
         else:
 
             def transform_train(examples):
+                clahe = CLAHE(clip_limit=1.0, tile_grid_size=(8, 8))
                 examples["target"] = np.stack(
                     [
-                        clahe(
-                            utils.img_to_array(ex, dtype="uint8"),
-                            clip_limit=1.0,
-                            tile_grid_size=(8, 8),
-                        )
+                        clahe(utils.img_to_array(ex, dtype="uint8"))
                         for ex in examples["image"]
                     ]
                 )
