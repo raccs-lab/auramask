@@ -1,14 +1,18 @@
 import keras
 from typing import Optional
-from auramask.utils import constants
-from auramask.utils import pcgrad  # noqa: F401
-from auramask import callbacks, losses, metrics  # noqa: F401
-from auramask.models.zero_dce import get_enhanced_image
+from auramask import callbacks as callbacks
+from auramask import layers as layers
+from auramask import losses as losses
+from auramask import metrics as metrics
+from auramask import models as models
+from auramask import utils as utils
 
 
 def AuraMask(config: dict, weights: Optional[str] = None):
     eps = config["epsilon"]
-    base_model: constants.BaseModels = constants.BaseModels[config["model"].upper()]
+    base_model: utils.constants.BaseModels = utils.constants.BaseModels[
+        config["model"].upper()
+    ]
     model_config: dict = config["model_config"]
 
     activation: str = model_config["output_activation"]
@@ -19,8 +23,11 @@ def AuraMask(config: dict, weights: Optional[str] = None):
 
     model_config["output_activation"] = None
 
-    if base_model in [constants.BaseModels.ZERODCE, constants.BaseModels.RESZERODCE]:
-        postproc = get_enhanced_image
+    if base_model in [
+        utils.constants.BaseModels.ZERODCE,
+        utils.constants.BaseModels.RESZERODCE,
+    ]:
+        postproc = models.zero_dce.get_enhanced_image
         preproc = None
     else:
 
@@ -30,7 +37,7 @@ def AuraMask(config: dict, weights: Optional[str] = None):
 
         if model_config["n_labels"] == 24:
             activation_fn = "sigmoid"  # postprocessing step only works for 0-1 range
-            postproc = get_enhanced_image
+            postproc = models.zero_dce.get_enhanced_image
         elif eps < 1:
 
             def postproc(x: keras.KerasTensor, inputs: keras.KerasTensor):
