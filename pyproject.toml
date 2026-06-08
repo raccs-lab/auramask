@@ -1,6 +1,6 @@
 [project]
 name = "auramask"
-version = "0.2.0"
+version = "1.1.0"
 description = "Toolkit for the development of Adversarial Transformation Networks to sabotage algorithmic inference."
 readme = "README.md"
 requires-python = ">=3.11"

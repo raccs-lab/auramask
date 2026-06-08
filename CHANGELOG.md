@@ -1,4 +1,4 @@
-## v0.2.0 (2026-06-08)
+## v1.1.0 (2026-06-08)
 
 ### BREAKING CHANGE
 
@@ -11,3 +11,5 @@
 ### Refactor
 
 - **auramask**: move auramask logic to a src folder and update pyproject to use uv build system
+
+## v1.0.0 (2026-06-08)
