@@ -1,6 +1,5 @@
 import unittest
 from keras import metrics, random, ops, backend as K
-from numpy import testing
 
 from auramask.losses.embeddistance import cosine_distance
 
@@ -25,14 +24,14 @@ class TestCosineDistance(unittest.TestCase):
         )
         b = ops.copy(a)
         dist = cosine_distance(a, b, axis=-1)
-        testing.assert_almost_equal(dist, 0.0)
+        assert ops.allclose(dist, 0.0)
 
     # Test Opposite CD: 1
     def test_opposite_embed(self):
         a = ops.zeros(self._image_shape)
         b = ops.ones(self._image_shape)
         dist = cosine_distance(a, b, axis=-1)
-        testing.assert_almost_equal(dist, 1.0)
+        assert ops.allclose(dist, 1.0)
 
     # Test Against Implementation:
     def test_against_tf(self):
@@ -40,7 +39,7 @@ class TestCosineDistance(unittest.TestCase):
         b = random.uniform(self._image_shape)
         dist = cosine_distance(a, b, axis=-1)
         tf_dist = 1 - metrics.CosineSimilarity()(a, b)
-        testing.assert_almost_equal(dist, tf_dist)
+        assert ops.allclose(dist, tf_dist)
 
 
 if __name__ == "__main__":

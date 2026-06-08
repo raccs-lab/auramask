@@ -1,9 +1,5 @@
 # ruff: noqa: E402
 
-import os
-
-os.environ["KERAS_BACKEND"] = "torch"
-
 import unittest
 from keras import ops, random, backend as K, config
 

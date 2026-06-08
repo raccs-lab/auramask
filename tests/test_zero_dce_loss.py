@@ -46,8 +46,7 @@ class TestColorConstancyLoss(unittest.TestCase):
         result = self.loss.call(y_true, y_pred)
 
         # Compare the result with the expected loss
-
-        testing.assert_allclose(result, expected_loss)
+        assert ops.allclose(result, expected_loss)
 
 
 class TestExposureControlLoss(unittest.TestCase):
@@ -101,7 +100,7 @@ class TestExposureControlLoss(unittest.TestCase):
         result = self.loss.call(y_true, y_pred)
 
         # Compare the result with the expected loss
-        testing.assert_allclose(result, expected_loss)
+        assert ops.allclose(result, expected_loss)
 
         self.loss.window_size = 16
 
@@ -147,7 +146,7 @@ class TestIlluminationSmoothnessLoss(unittest.TestCase):
         result = self.loss.call(y_true, y_pred)
 
         # Compare the result with the expected loss (allowing some tolerance for floating-point errors)
-        testing.assert_allclose(result, expected_loss)
+        assert ops.allclose(result, expected_loss)
 
 
 if __name__ == "__main__":

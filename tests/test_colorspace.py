@@ -2,7 +2,6 @@ import unittest
 from keras import ops, random, backend as K
 
 from auramask.utils.colorspace import ColorSpaceEnum
-from numpy import testing
 
 
 class ColorTransformMethods(unittest.TestCase):
@@ -32,7 +31,7 @@ class ColorTransformMethods(unittest.TestCase):
         self.assertLessEqual(ops.max(to_), 1.0)
         self.assertGreaterEqual(ops.min(to_), 0.0)
         self.assertEqual(to_.shape, self._test_img.shape)
-        testing.assert_allclose(to_, self._test_img)
+        assert ops.allclose(to_, self._test_img)
 
     def test_to_and_from_rgb(self):
         processed_ = ColorSpaceEnum.RGB.value[0](self._test_img)
@@ -40,14 +39,14 @@ class ColorTransformMethods(unittest.TestCase):
         self.assertLessEqual(ops.max(processed_), 1.0)
         self.assertGreaterEqual(ops.min(processed_), 0.0)
         self.assertEqual(processed_.shape, self._test_img.shape)
-        testing.assert_allclose(processed_, self._test_img)
+        assert ops.allclose(processed_, self._test_img)
 
     def test_to_rgb_batch(self):
         to_ = ColorSpaceEnum.RGB.value[0](self._test_batch_imgs)
         self.assertLessEqual(ops.max(to_), 1.0)
         self.assertGreaterEqual(ops.min(to_), 0.0)
         self.assertEqual(to_.shape, self._test_batch_imgs.shape)
-        testing.assert_allclose(to_, self._test_batch_imgs)
+        assert ops.allclose(to_, self._test_batch_imgs)
 
     def test_to_and_from_rgb_batch(self):
         processed_ = ColorSpaceEnum.RGB.value[0](self._test_batch_imgs)
@@ -55,14 +54,16 @@ class ColorTransformMethods(unittest.TestCase):
         self.assertLessEqual(ops.max(processed_), 1.0)
         self.assertGreaterEqual(ops.min(processed_), 0.0)
         self.assertEqual(processed_.shape, self._test_batch_imgs.shape)
-        testing.assert_allclose(processed_, self._test_batch_imgs)
+        assert ops.allclose(processed_, self._test_batch_imgs)
 
     # RGB -> YUV -> RGB
     def test_to_yuv(self):
         to_ = ColorSpaceEnum.YUV.value[0](self._test_img)
         from tensorflow import image
 
-        tf_to_ = image.rgb_to_yuv(self._test_img)
+        tf_to_ = ops.convert_to_numpy(
+            image.rgb_to_yuv(ops.convert_to_numpy(self._test_img))
+        )
 
         # Test Y is in [0, 1]
         self.assertLessEqual(ops.max(to_[:, :, 0]), 1.0)
@@ -77,7 +78,7 @@ class ColorTransformMethods(unittest.TestCase):
         self.assertGreaterEqual(ops.min(to_[:, :, 2]), -0.5)
 
         self.assertEqual(to_.shape, self._test_img.shape)
-        testing.assert_allclose(
+        assert ops.allclose(
             ops.mean(tf_to_),
             ops.mean(to_),
             atol=self.atol,
@@ -90,7 +91,7 @@ class ColorTransformMethods(unittest.TestCase):
         self.assertLessEqual(ops.max(processed_), 1.0)
         self.assertGreaterEqual(ops.min(processed_), 0.0)
         self.assertEqual(processed_.shape, self._test_img.shape)
-        testing.assert_allclose(
+        assert ops.allclose(
             ops.mean(processed_),
             ops.mean(self._test_img),
             atol=self.atol,
@@ -101,7 +102,9 @@ class ColorTransformMethods(unittest.TestCase):
         to_ = ColorSpaceEnum.YUV.value[0](self._test_batch_imgs)
         from tensorflow import image
 
-        tf_to_ = image.rgb_to_yuv(self._test_batch_imgs)
+        tf_to_ = ops.convert_to_numpy(
+            image.rgb_to_yuv(ops.convert_to_numpy(self._test_batch_imgs))
+        )
 
         # Test Y is in [0, 1]
         self.assertLessEqual(ops.max(to_[:, :, :, 0]), 1.0)
@@ -116,7 +119,7 @@ class ColorTransformMethods(unittest.TestCase):
         self.assertGreaterEqual(ops.min(to_[:, :, :, 2]), -0.5)
 
         self.assertEqual(to_.shape, self._test_batch_imgs.shape)
-        testing.assert_allclose(
+        assert ops.allclose(
             ops.mean(to_, axis=[1, 2, 3]),
             ops.mean(tf_to_, axis=[1, 2, 3]),
             atol=self.atol,
@@ -129,7 +132,7 @@ class ColorTransformMethods(unittest.TestCase):
         self.assertLessEqual(ops.max(processed_), 1.0)
         self.assertGreaterEqual(ops.min(processed_), 0.0)
         self.assertEqual(processed_.shape, self._test_batch_imgs.shape)
-        testing.assert_allclose(
+        assert ops.allclose(
             ops.mean(processed_, axis=[1, 2, 3]),
             ops.mean(self._test_batch_imgs, axis=[1, 2, 3]),
             atol=self.atol,
