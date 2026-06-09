@@ -19,6 +19,9 @@ dependencies = [
     "wandb>=0.21.3",
 ]
 
+[project.scripts]
+auramask = "auramask.cli:main"
+
 [build-system]
 requires = ["uv_build>=0.9.10,<0.10.0"]
 build-backend = "uv_build"
@@ -75,7 +78,12 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [project.optional-dependencies]
-torch = ["torch>=2.8.0", "torchvision>=0.23.0"]
+torch = [
+    "torch>=2.8.0",
+    "torchvision>=0.23.0",
+    "tensorflow>=2.20.0",
+    "pyiqa>=0.1.15.post2",
+]
 tf = ["tensorflow>=2.20.0"]
 
 [dependency-groups]

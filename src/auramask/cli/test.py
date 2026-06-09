@@ -1,17 +1,9 @@
-# ruff: noqa: E402
 import argparse
-import hashlib
 import os
-from pathlib import Path
-from random import choice
-from string import ascii_uppercase
-from datetime import datetime
 
 import wandb
 import datasets
 import tqdm
-
-os.environ["KERAS_BACKEND"] = "torch"
 
 import keras
 import numpy as np
@@ -32,29 +24,7 @@ keras.backend.set_image_data_format("channels_last")
 ARTIFACT_URL = "run_{0}_model:{1}"
 
 
-# Path checking and creation if appropriate
-def dir_path(path):
-    if path:
-        path = Path(path)
-        try:
-            if not path.parent.parent.exists():
-                raise FileNotFoundError()
-            path.mkdir(parents=True, exist_ok=True)
-            return str(path.absolute())
-        except FileNotFoundError:
-            raise argparse.ArgumentTypeError(
-                f"The directory {path} cannot have more than 2 missing parents."
-            )
-        except FileExistsError:
-            raise argparse.ArgumentTypeError(f"The directory {path} exists as a file")
-    return
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        prog="AuraMask Validation",
-        description="An evaluation script to compute metrics on validation data.",
-    )
+def configure_parser(parser: argparse.ArgumentParser):
     parser.add_argument("--run-id", type=str, required=False)
     parser.add_argument("--hf-model", type=str, required=False)
     parser.add_argument("--version", type=str, default="latest")
@@ -91,16 +61,7 @@ def parse_args():
         ],
         nargs="+",
     )
-    parser.add_argument(
-        "-S",
-        "--seed",
-        type=str,
-        default="".join(choice(ascii_uppercase) for _ in range(12)),
-    )
-    parser.add_argument(
-        "--log", default=True, type=bool, action=argparse.BooleanOptionalAction
-    )
-    parser.add_argument("--log-dir", default=None, type=dir_path)
+
     parser.add_argument("-v", "--verbose", default=1, type=int)
     parser.add_argument(
         "--note", default=False, type=bool, action=argparse.BooleanOptionalAction
@@ -128,15 +89,11 @@ def parse_args():
         help="(Optional) The config, split, and column that maps to precomputed images.",
     )
 
+
+def parse_args(parser: argparse.ArgumentParser):
     args = parser.parse_args()
 
     return args
-
-
-def set_seed():
-    seed = hparams["seed"]
-    seed = int(hashlib.sha256(seed.encode("utf-8")).hexdigest(), 16) % 10**8
-    keras.utils.set_random_seed(seed)
 
 
 def load_model() -> keras.Model:
@@ -338,40 +295,21 @@ def load_dataset() -> datasets.Dataset:
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        prog="AuraMask Evaluation",
+        description="Evaluation interface for AuraMask toolkit.",
+    )
+    configure_parser(parser)
     hparams.update(parse_args().__dict__)
     dims = hparams.pop("dims")
     hparams["input"] = (dims, dims)
-    log = hparams.pop("log")
     logdir = hparams.pop("log_dir")
     note = hparams.pop("note")
-    mixed_precision = hparams.pop("mixed_precision")
-
-    if mixed_precision:
-        print("Using mixed precision")
-        keras.mixed_precision.set_dtype_policy("mixed_float16")
-
-    if not log:
-        os.environ["WANDB_MODE"] = "offline"
 
     if note:
         note = input("Note for Run:")
     else:
         note = ""
-    if not logdir:
-        logdir = Path(
-            os.path.join(
-                os.path.curdir,
-                "logs",
-                datetime.now().strftime("%m-%d"),
-                hparams["seed"],
-            )
-        )
-    else:
-        logdir = Path(os.path.join(logdir))
-    logdir.mkdir(parents=True, exist_ok=True)
-    logdir = str(logdir)
-
-    set_seed()
 
     wandb.init(
         project="auramask",
@@ -440,7 +378,3 @@ def main():
     wandb.run.log({"validation": validation_tab})
 
     wandb.finish()
-
-
-if __name__ == "__main__":
-    main()

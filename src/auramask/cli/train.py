@@ -1,68 +1,42 @@
-# ruff: noqa: E402
 import os
-
-os.environ["KERAS_BACKEND"] = "torch"
-
 import keras
 from keras.src.utils import file_utils
 import wandb
 import auramask
-import argparse
+from auramask import utils as aurautils
+from argparse import (
+    ArgumentParser,
+    FileType,
+    BooleanOptionalAction,
+    ArgumentError,
+)
 import json
 from ast import literal_eval
-from pathlib import Path
-from random import choice
-from string import ascii_uppercase
-from datetime import datetime
-from hashlib import sha256
 
 # Global hparams object
-hparams: dict = {}
 keras.config.disable_traceback_filtering()
 # Normalize network to use channels last ordering
 keras.backend.set_image_data_format("channels_last")
 
 
-# Path checking and creation if appropriate
-def dir_path(path):
-    if path:
-        path = Path(path)
-        try:
-            if not path.parent.parent.exists():
-                raise FileNotFoundError()
-            path.mkdir(parents=True, exist_ok=True)
-            return str(path.absolute())
-        except FileNotFoundError:
-            raise argparse.ArgumentTypeError(
-                f"The directory {path} cannot have more than 2 missing parents."
-            )
-        except FileExistsError:
-            raise argparse.ArgumentTypeError(f"The directory {path} exists as a file")
-    return
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        prog="AuraMask Training",
-        description="A training script for the AuraMask network",
-    )
+def configure_parser(parser: ArgumentParser):
     parser.add_argument(
         "-m",
         "--model-backbone",
-        type=auramask.constants.BaseModels,
-        action=auramask.constants.EnumAction,
+        type=aurautils.constants.BaseModels,
+        action=aurautils.constants.EnumAction,
         required=True,
     )
-    parser.add_argument("--model-config", type=argparse.FileType("r"))
+    parser.add_argument("--model-config", type=FileType("r"))
     parser.add_argument(
         "-F",
-        type=auramask.constants.FaceEmbedEnum,
+        type=aurautils.constants.FaceEmbedEnum,
         nargs="+",
         required=False,
-        action=auramask.constants.EnumAction,
+        action=aurautils.constants.EnumAction,
     )
     parser.add_argument(
-        "--threshold", default=True, type=bool, action=argparse.BooleanOptionalAction
+        "--threshold", default=True, type=bool, action=BooleanOptionalAction
     )
     parser.add_argument("-p", "--rho", type=float, default=1.0)
     parser.add_argument("-a", "--alpha", type=float, default=2e-4)
@@ -76,13 +50,7 @@ def parse_args():
         "--lpips-spatial",
         type=bool,
         required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "--mixed-precision",
-        default=True,
-        type=bool,
-        action=argparse.BooleanOptionalAction,
+        action=BooleanOptionalAction,
     )
     parser.add_argument(
         "-L",
@@ -135,58 +103,48 @@ def parse_args():
     parser.add_argument(
         "--style-ref",
         type=auramask.losses.StyleRefs,
-        action=auramask.constants.EnumAction,
+        action=aurautils.constants.EnumAction,
         default=auramask.losses.StyleRefs.STARRYNIGHT,
         required=False,
     )
-    parser.add_argument(
-        "-S",
-        "--seed",
-        type=str,
-        default="".join(choice(ascii_uppercase) for _ in range(12)),
-    )
-    parser.add_argument(
-        "--log", default=True, type=bool, action=argparse.BooleanOptionalAction
-    )
-    parser.add_argument("--log-dir", default=None, type=dir_path)
     parser.add_argument("--training", type=float, required=True)
     parser.add_argument("--testing", type=float, required=True)
     parser.add_argument(
-        "--eager", default=False, type=bool, action=argparse.BooleanOptionalAction
-    )
-    parser.add_argument("-v", "--verbose", default=1, type=int)
-    parser.add_argument(
-        "--note", default=False, type=bool, action=argparse.BooleanOptionalAction
+        "--eager", default=False, type=bool, action=BooleanOptionalAction
     )
     parser.add_argument(
         "-C",
         "--color-space",
-        type=auramask.constants.ColorSpaceEnum,
-        action=auramask.constants.EnumAction,
-        default=auramask.constants.ColorSpaceEnum.RGB,
+        type=aurautils.constants.ColorSpaceEnum,
+        action=aurautils.constants.EnumAction,
+        default=aurautils.constants.ColorSpaceEnum.RGB,
         required=False,
     )
     parser.add_argument(
-        "--checkpoint", default=False, type=bool, action=argparse.BooleanOptionalAction
+        "--checkpoint", default=False, type=bool, action=BooleanOptionalAction
     )
     parser.add_argument(
         "-D",
         "--dataset",
         default="lfw",
-        type=auramask.constants.DatasetEnum,
-        action=auramask.constants.EnumAction,
+        type=aurautils.constants.DatasetEnum,
+        action=aurautils.constants.EnumAction,
         required=True,
     )
     parser.add_argument(
         "--instagram-filter",
-        type=auramask.constants.InstaFilterEnum,
-        action=auramask.constants.EnumAction,
+        type=aurautils.constants.InstaFilterEnum,
+        action=aurautils.constants.EnumAction,
         required=False,
     )
     parser.add_argument(
-        "--metric", type=bool, default=False, action=argparse.BooleanOptionalAction
+        "--metric", type=bool, default=False, action=BooleanOptionalAction
     )
 
+    return parser
+
+
+def parse_args(parser):
     args = parser.parse_args()
 
     from json import load
@@ -196,8 +154,8 @@ def parse_args():
     return args
 
 
-def load_data():
-    ds: auramask.constants.DatasetEnum = hparams["dataset"]
+def load_data(hparams: dict):
+    ds: aurautils.constants.DatasetEnum = hparams["dataset"]
     train_size, test_size = hparams["training"], hparams["testing"]
 
     # In the case that a number of samples is passed in instead of a percentage of the test split
@@ -206,7 +164,7 @@ def load_data():
     if test_size > 1.0:
         test_size = int(test_size)
 
-    insta: auramask.constants.InstaFilterEnum = hparams["instagram_filter"]
+    insta: aurautils.constants.InstaFilterEnum = hparams["instagram_filter"]
     t_ds, v_ds = ds.load_dataset(
         hparams["input"],
         train_size,
@@ -220,7 +178,7 @@ def load_data():
     return t_ds, v_ds
 
 
-def initialize_loss():
+def initialize_loss(hparams: dict):
     losses = []
     weights = []
     loss_config = {}
@@ -261,7 +219,7 @@ def initialize_loss():
         lam = hparams.pop("lambda")
         loss_in = hparams.pop("losses")
         if len(loss_in) != len(lam) and len(lam) > 1:
-            raise argparse.ArgumentError(
+            raise ArgumentError(
                 message="The length of lambda values must equal that of losses argument"
             )
         elif len(lam) <= 1:
@@ -357,23 +315,36 @@ def initialize_loss():
     return losses, weights, cs_transforms, metrics
 
 
-def initialize_model():
-    losses, losses_w, losses_t, metrics = initialize_loss()
+def handle_environment_config() -> dict:
+    """Retrieves configuration string from AURAMASK_CONFIG environment variable to apply it to the model configuration.
 
-    adaptive_callback = []
-
+    Returns:
+        dict: dictionary of values to update the existing model config with.
+    """
     # Allows modifying the config at calling with the AURAMASK_CONFIG environment variable
     cfg_mod: dict = literal_eval(os.getenv("AURAMASK_CONFIG", "{}"))
     for key, val in cfg_mod.items():
         if isinstance(val, str) and val.lower() in ["true", "false"]:
             cfg_mod[key] = True if val.lower() == "true" else False
-    hparams["model_config"].update(cfg_mod)
+    return cfg_mod
 
+
+def initialize_model(hparams: dict):
+    losses, losses_w, losses_t, metrics = initialize_loss(hparams)
+
+    adaptive_callback = []
+
+    hparams["model_config"].update(handle_environment_config())
+
+    # Ensure model name is in a parseable format
     hparams["model"] = hparams.pop("model_backbone").name.lower()
+
+    # TODO: Refacor AuraMask model building script
     model = auramask.AuraMask(hparams)
 
     # keras.utils.plot_model(model, expand_nested=True, show_shapes=True)
 
+    # TODO: Support more optimizers
     if hparams["optimizer"] == "adam":
         optimizer = keras.optimizers.Adam(learning_rate=hparams["alpha"], clipnorm=1.0)
     elif hparams["optimizer"] == "adamw":
@@ -417,12 +388,6 @@ def initialize_model():
     )
 
     return model, adaptive_callback
-
-
-def set_seed():
-    seed = hparams["seed"]
-    seed = int(sha256(seed.encode("utf-8")).hexdigest(), 16) % 10**8
-    keras.utils.set_random_seed(seed)
 
 
 def get_sample_data(ds):
@@ -485,45 +450,19 @@ def init_callbacks(hparams: dict, sample, logdir, note: str = ""):
     return train_callbacks
 
 
-def main():
-    # Constant Defaults
-    hparams.update(parse_args().__dict__)
+def apply_params(hparams: dict):
     dims = hparams.pop("dims")
     hparams["input"] = (dims, dims)
-    log = hparams.pop("log")
-    logdir = hparams["log_dir"]
-    note = hparams.pop("note")
     verbose = hparams.pop("verbose")
-    mixed_precision = hparams["mixed_precision"]
 
-    if mixed_precision:
-        print("Using mixed precision for training")
-        keras.mixed_precision.set_dtype_policy("mixed_float16")
+    model, callbacks = initialize_model(hparams)
 
-    if not log:
-        os.environ["WANDB_MODE"] = "offline"
+    note = hparams.pop("note")
 
     if note:
-        note = input("Note for Run:")
+        note = input("Give a note for this run")
     else:
         note = ""
-    if not logdir:
-        logdir = Path(
-            os.path.join(
-                os.path.curdir,
-                "logs",
-                datetime.now().strftime("%m-%d"),
-                hparams["seed"],
-            )
-        )
-    else:
-        logdir = Path(os.path.join(logdir))
-    logdir.mkdir(parents=True, exist_ok=True)
-    hparams["log_dir"] = str(logdir)
-
-    set_seed()
-
-    model, callbacks = initialize_model()
 
     hparams["auramask_params"] = hparams["model_config"]
 
@@ -543,7 +482,7 @@ def main():
         epoch = 0
 
     # Load the training and validation data
-    t_ds, v_ds = load_data()
+    t_ds, v_ds = load_data(hparams)
     v = get_sample_data(v_ds)
 
     # On resume, make sure the iterable dataset is shuffled according to the HF scheme
@@ -563,7 +502,3 @@ def main():
         steps_per_epoch=hparams["steps_per_epoch"],
     )
     return training_history
-
-
-if __name__ == "__main__":
-    main()
