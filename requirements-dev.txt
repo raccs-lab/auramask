@@ -1,5 +1,0 @@
-opencv-python
-scikit-image
-pdoc3
-ruff
-pre-commit
