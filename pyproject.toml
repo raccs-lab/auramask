@@ -68,8 +68,11 @@ major_version_zero = true
 gpg_sign = true
 version_files = ["src/auramask/__version__.py"]
 
+[tool.uv]
+conflicts = [[{ extra = "torch" }, { extra = "torch-cpu" }]]
+
 [tool.uv.sources]
-torch = [{ index = "pytorch", marker = "platform_system == 'Linux'" }]
+torch = [{ index = "pytorch", extra = "torch-cpu" }]
 keras3-unets = { git = "https://github.com/logasja/keras3-unets.git" }
 
 [[tool.uv.index]]
@@ -84,6 +87,12 @@ torch = [
     "tensorflow>=2.20.0",
     "pyiqa>=0.1.15.post2",
 ]
+torch-cpu = [
+    "torch>=2.8.0",
+    "torchvision>=0.23.0",
+    "tensorflow>=2.20.0",
+    "pyiqa>=0.1.15.post2",
+]
 tf = ["tensorflow>=2.20.0"]
 
 [dependency-groups]
@@ -93,6 +102,5 @@ dev = [
     "pre-commit>=4.3.0",
     "ruff>=0.13.0",
     "scikit-image>=0.25.2",
-    { include-group = "test" },
 ]
 test = ["pytest>=9.0.3"]
