@@ -1,5 +1,6 @@
 import numpy as np
 import albumentations as A
+import cv2
 
 
 # TODO: the w and h refer to the resampled and not center-cropped. Could be misleading to some users.
@@ -18,7 +19,7 @@ def gen_image_loading_layers(w: int, h: int):
         [
             A.FancyPCA(p=1.0),
             A.ToFloat(max_value=255, p=1),
-            A.LongestMaxSize(np.maximum(h, w), interpolation=A.cv2.INTER_AREA),
+            A.LongestMaxSize(np.maximum(h, w), interpolation=cv2.INTER_AREA),
             A.CenterCrop(int(h * 0.875), int(w * 0.875)),
         ]
     )
