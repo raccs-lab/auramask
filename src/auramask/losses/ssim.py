@@ -68,6 +68,9 @@ def _ssim_helper(
     # (2 * mu_x * mu_y + c1) / (mu_x ** 2 + mu_y ** 2 + c1).
     mean0 = reducer(x)
     mean1 = reducer(y)
+    # mean0 = ops.image.gaussian_blur(x, kernel_size=(11, 11), sigma=(1.5, 1.5))
+    # mean1 = ops.image.gaussian_blur(y, kernel_size=(11, 11), sigma=(1.5, 1.5))
+
     num0 = mean0 * mean1 * 2.0
     den0 = ops.square(mean0) + ops.square(mean1)
     luminance = (num0 + c1) / (den0 + c1)
@@ -77,8 +80,13 @@ def _ssim_helper(
     # Note that `reducer` is a weighted sum with weight w_k, \sum_i w_i = 1, then
     #   cov_{xy} = \sum_i w_i (x_i - \mu_x) (y_i - \mu_y)
     #          = \sum_i w_i x_i y_i - (\sum_i w_i x_i) (\sum_j w_j y_j).
+    # num1 = ops.image.gaussian_blur(x * y, kernel_size=(11, 11), sigma=(1.5, 1.5)) * 2
+    # den1 = ops.image.gaussian_blur(
+    #     ops.square(x) + ops.square(y), kernel_size=(11, 11), sigma=(1.5, 1.5)
+    # )
     num1 = reducer(x * y) * 2.0
     den1 = reducer(ops.square(x) + ops.square(y))
+
     c2 *= compensation
     cs = (num1 - num0 + c2) / (den1 - den0 + c2)
 
@@ -140,17 +148,15 @@ def _ssim_per_channel(
     # BUG: Even though variable data format has implied support, currently this only supports channels last
     def reducer(x):
         shape = ops.shape(x)
-        x = ops.reshape(x, newshape=ops.concatenate([[-1], shape[-3:]], 0))
+        x = ops.reshape(x, newshape=(-1,) + shape[-3:])
         y = ops.nn.depthwise_conv(
             x,
             kernel,
-            strides=[1, 1, 1, 1],
+            strides=[1, 1],
             padding="valid",
             data_format=K.image_data_format(),
         )
-        return ops.reshape(
-            y, newshape=ops.concatenate([shape[:-3], ops.shape(y)[1:]], 0)
-        )
+        return ops.reshape(y, newshape=shape[:-3] + ops.shape(y)[1:])
 
     luminance, cs = _ssim_helper(img1, img2, reducer, max_val, compensation, k1, k2)
 
@@ -158,7 +164,7 @@ def _ssim_per_channel(
     if return_index_map:
         ssim_val = luminance * cs
     else:
-        axes = ops.convert_to_tensor([-3, -2], dtype="int32")
+        axes = [-3, -2]
         ssim_val = ops.mean(luminance * cs, axes)
         cs = ops.mean(cs, axes)
     return ssim_val, cs
@@ -249,7 +255,7 @@ def ssim(
     )
 
     # Compute average over color channels.
-    return ops.reduce_mean(ssim_per_channel, [-1])
+    return ops.mean(ssim_per_channel, [-1])
 
 
 class DSSIMObjective(Loss):
@@ -314,7 +320,7 @@ class DSSIMObjective(Loss):
             ops.add(ops.add(var_pred, var_true), self.c2),
         )
         ssim = ops.divide(ssim, denom)
-        ssim = ops.mean(ops.divide(ops.subtract(1.0, ssim), 2.0))
+        ssim = ops.mean(ops.subtract(1.0, ssim))
         return ssim
 
 
@@ -343,6 +349,8 @@ class SSIMC(Loss):
         name="SSIMC",
         k1=0.01,
         k2=0.03,
+        filter_size=11,
+        filter_sigma=1.5,
         max_value=1.0,
         **kwargs,
     ):
@@ -350,9 +358,19 @@ class SSIMC(Loss):
         self.k1 = k1
         self.k2 = k2
         self.max_value = max_value
+        self.filter_size = filter_size
+        self.filter_sigma = filter_sigma
 
     def call(self, y_true, y_pred):
-        return 1 - ssim(y_true, y_pred, max_val=self.max_value, k1=self.k1, k2=self.k2)
+        return 1 - ssim(
+            y_true,
+            y_pred,
+            max_val=self.max_value,
+            k1=self.k1,
+            k2=self.k2,
+            filter_size=self.filter_size,
+            filter_sigma=self.filter_sigma,
+        )
 
 
 # @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
