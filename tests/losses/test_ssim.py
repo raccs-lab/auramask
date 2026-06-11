@@ -1,14 +1,9 @@
-# ruff: noqa: E402
-
 import unittest
-from keras import ops, random, backend as K, config
+from keras import ops, random, backend as K
 
 from numpy import testing
 from skimage.metrics import structural_similarity as compare_ssim
 from auramask.losses.ssim import DSSIMObjective
-
-config.disable_traceback_filtering()
-K.set_image_data_format("channels_last")
 
 
 class TestSSIM(unittest.TestCase):
