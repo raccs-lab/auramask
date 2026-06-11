@@ -353,6 +353,8 @@ class SSIMC(Loss):
         return 1 - ssim(y_true, y_pred, max_val=self.max_value, k1=self.k1, k2=self.k2)
 
 
+# @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
+# TODO: Implement depreciation warnings for python versions before and after 3.14
 class IQASSIMC(Loss):
     def __init__(
         self,
