@@ -9,7 +9,13 @@ from auramask.losses.embeddistance import (
     FaceEmbeddingAbsoluteLoss,
 )
 from auramask.losses.aesthetic import AestheticLoss, IQAAestheticLoss
-from auramask.losses.ssim import DSSIMObjective, GRAYSSIMObjective, IQASSIMC, IQACWSSIM
+from auramask.losses.ssim import (
+    DSSIMObjective,
+    GRAYSSIMObjective,
+    IQASSIMC,
+    IQACWSSIM,
+    SSIMC,
+)
 from auramask.losses.style import StyleLoss, StyleRefs
 from auramask.losses.variation import VariationLoss
 from auramask.losses.zero_dce import (
