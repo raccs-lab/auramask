@@ -52,7 +52,9 @@ class InstaFilterEnum(Enum):
         fn = getattr(pilgram, self.name.lower())
         clahe = CLAHE(clip_limit=1.0, tile_grid_size=(8, 8))
         batch["image"] = [
-            utils.array_to_img(clahe(utils.img_to_array(f, dtype="uint8")))
+            utils.array_to_img(
+                clahe(image=utils.img_to_array(f, dtype="uint8"))["image"]
+            )
             for f in features
             # autocontrast(f, preserve_tone=True) for f in features
         ]
