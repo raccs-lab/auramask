@@ -2,6 +2,7 @@ from enum import Enum
 import os
 from typing import Callable, TypedDict
 from datasets import load_dataset, Dataset
+from keras import backend as K
 from auramask.utils import preprocessing
 from os import cpu_count
 import numpy as np
@@ -185,6 +186,7 @@ class DatasetEnum(Enum):
                 transform_train,
                 batched=True,
                 batch_size=batch,
+                input_columns=self.value[2],
             )
             .shuffle(buffer_size=10_000)
         )
@@ -197,13 +199,23 @@ class DatasetEnum(Enum):
                 transform_test,
                 batched=True,
                 batch_size=batch,
+                input_columns=self.value[2],
             )
         )
-        from torch.utils.data import DataLoader
 
-        return DataLoader(ds["train"], batch_size=batch), DataLoader(
-            ds["test"], batch_size=batch
-        )
+        if K.backend() == "torch":
+            from torch.utils.data import DataLoader, _utils
+
+            # TODO: `collate_fn` implementation is potentially fragile as it uses private part of pytorch library
+            return DataLoader(
+                ds["train"],
+                batch_size=batch,
+                collate_fn=lambda x: tuple(_utils.collate.default_collate(x).values()),
+            ), DataLoader(
+                ds["test"],
+                batch_size=batch,
+                collate_fn=lambda x: tuple(_utils.collate.default_collate(x).values()),
+            )
 
     def _load_data_torch(
         self,
