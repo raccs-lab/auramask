@@ -14,10 +14,10 @@ def _fspecial_gauss(size: int, sigma: float):
     g = ops.square(coords)
     g *= -0.5 / ops.square(sigma)
 
-    g = ops.reshape(g, shape=[1, -1]) + ops.reshape(g, shape=[-1, 1])
-    g = ops.reshape(g, shape=[1, -1])
+    g = ops.reshape(g, newshape=[1, -1]) + ops.reshape(g, newshape=[-1, 1])
+    g = ops.reshape(g, newshape=[1, -1])
     g = ops.nn.softmax(g)
-    return ops.reshape(g, shape=[size, size, 1, 1])
+    return ops.reshape(g, newshape=[size, size, 1, 1])
 
 
 def _ssim_helper(
@@ -140,7 +140,7 @@ def _ssim_per_channel(
     # BUG: Even though variable data format has implied support, currently this only supports channels last
     def reducer(x):
         shape = ops.shape(x)
-        x = ops.reshape(x, shape=ops.concatenate([[-1], shape[-3:]], 0))
+        x = ops.reshape(x, newshape=ops.concatenate([[-1], shape[-3:]], 0))
         y = ops.nn.depthwise_conv(
             x,
             kernel,
@@ -148,7 +148,9 @@ def _ssim_per_channel(
             padding="valid",
             data_format=K.image_data_format(),
         )
-        return ops.reshape(y, ops.concatenate([shape[:-3], ops.shape(y)[1:]], 0))
+        return ops.reshape(
+            y, newshape=ops.concatenate([shape[:-3], ops.shape(y)[1:]], 0)
+        )
 
     luminance, cs = _ssim_helper(img1, img2, reducer, max_val, compensation, k1, k2)
 
