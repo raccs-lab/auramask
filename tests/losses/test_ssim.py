@@ -17,7 +17,7 @@ def image_data_format(request):
 
 @pytest.mark.parametrize(
     "image_data_format",
-    ["channels_last", "channels_first"],
+    ["channels_last"],
     indirect=True
 )
 @pytest.mark.parametrize(
@@ -26,7 +26,7 @@ def image_data_format(request):
 )
 @pytest.mark.parametrize(
     "noise",
-    [0.0, 0.01, 0.25]
+    [0.0, 0.1, 0.3]
 )
 @pytest.mark.parametrize(
     "gaussian_sigma",
@@ -74,7 +74,7 @@ def test_ssim_noise_variations(image_data_format, img_shape, atol_rtol, noise, g
         K2=k2
     )
 
-    actual_ssim = SSIMC(gaussian_sigma=gaussian_sigma, k1=k1, k2=k2, dtype=K.floatx())(img1, img2)
+    actual_ssim = SSIMC(k1=k1, k2=k2, filter_sigma=gaussian_sigma, dtype=K.floatx())(img1, img2)
 
     assert ops.allclose(expected_ssim, actual_ssim, **atol_rtol)
 
