@@ -10,8 +10,6 @@ from auramask.losses.embeddistance import (
 )
 from auramask.losses.aesthetic import AestheticLoss, IQAAestheticLoss
 from auramask.losses.ssim import (
-    DSSIMObjective,
-    GRAYSSIMObjective,
     IQASSIMC,
     IQACWSSIM,
     SSIMC,
