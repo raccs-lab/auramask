@@ -350,10 +350,10 @@ dev = [
     { name = "pdoc3" },
     { name = "pre-commit" },
     { name = "ruff" },
-    { name = "scikit-image" },
 ]
 test = [
     { name = "pytest" },
+    { name = "scikit-image" },
 ]
 
 [package.metadata]
@@ -384,9 +384,11 @@ dev = [
     { name = "pdoc3", specifier = ">=0.11.6" },
     { name = "pre-commit", specifier = ">=4.3.0" },
     { name = "ruff", specifier = ">=0.13.0" },
-    { name = "scikit-image", specifier = ">=0.25.2" },
 ]
-test = [{ name = "pytest", specifier = ">=9.0.3" }]
+test = [
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "scikit-image", specifier = ">=0.26.0" },
+]
 
 [[package]]
 name = "bitsandbytes"
