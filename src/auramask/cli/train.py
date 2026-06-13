@@ -64,6 +64,7 @@ def configure_parser(parser: ArgumentParser):
             "squeeze",
             "mse",
             "mae",
+            "ssim",
             "ssimc",
             "cwssim",
             "dsssim",
@@ -234,6 +235,9 @@ def initialize_loss(hparams: dict):
                 cs_transforms.append(False)
             elif loss_i == "mae":
                 tmp_loss = keras.losses.MeanAbsoluteError()
+                cs_transforms.append(False)
+            elif loss_i == "ssim":
+                tmp_loss = auramask.losses.SSIMC()
                 cs_transforms.append(False)
             elif loss_i == "ssimc":
                 tmp_loss = auramask.losses.IQASSIMC()

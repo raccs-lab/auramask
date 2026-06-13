@@ -168,6 +168,8 @@ def initialize_metrics() -> list[keras.Metric]:
                     mae,
                     name=metric,
                 )
+            elif metric == "ssim":
+                tmp_metric = aura_metrics.SSIM()
             elif metric == "ssimc":
                 tmp_metric = aura_metrics.IQASSIMC()
             elif metric == "cwssim":
