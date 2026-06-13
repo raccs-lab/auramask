@@ -68,7 +68,7 @@ gpg_sign = true
 version_files = ["src/auramask/__version__.py"]
 
 [tool.uv]
-conflicts = [[{ extra = "torch" }, { extra = "torch-cpu" }, {extra = "tf"}]]
+conflicts = [[{ extra = "torch" }, { extra = "torch-cpu" }, {extra = "tf"}, {extra = "tf"}]]
 
 [tool.uv.sources]
 torch = [{ index = "pytorch", extra = "torch-cpu" }]
