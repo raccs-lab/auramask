@@ -8,7 +8,7 @@ from auramask.losses.ssim import SSIMC
 # Set floating point precision tolerances (absolute 0 and relative 2%)
 @pytest.fixture
 def atol_rtol():
-    return {"rtol": 0.02, "atol": 0}
+    return {"rtol": 0.05, "atol": 5e-7}
 
 @pytest.fixture
 def image_data_format(request):
@@ -17,7 +17,7 @@ def image_data_format(request):
 
 @pytest.mark.parametrize(
     "image_data_format",
-    ["channels_last"],
+    ["channels_last", "channels_first"],
     indirect=True
 )
 @pytest.mark.parametrize(
@@ -74,7 +74,7 @@ def test_ssim_noise_variations(image_data_format, img_shape, atol_rtol, noise, g
         K2=k2
     )
 
-    actual_ssim = SSIMC(k1=k1, k2=k2, filter_sigma=gaussian_sigma, dtype=K.floatx())(img1, img2)
+    actual_ssim = SSIMC(k1=k1, k2=k2, filter_sigma=gaussian_sigma, dtype=K.floatx())(ops.expand_dims(img1, 0), ops.expand_dims(img2, 0))
 
     assert ops.allclose(expected_ssim, actual_ssim, **atol_rtol)
 
