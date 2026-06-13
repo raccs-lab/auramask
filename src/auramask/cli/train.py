@@ -88,7 +88,7 @@ def configure_parser(parser: ArgumentParser):
         ],
         nargs="+",
     )
-    parser.add_argument("-l", "--lambda", type=float, default=[1.0], nargs="+")
+    parser.add_argument("-l", "--lam", type=float, default=[1.0], nargs="+")
     parser.add_argument(
         "--adaptive-loss",
         type=str,
@@ -217,11 +217,11 @@ def initialize_loss(hparams: dict):
             )  # Determine if it needs to be transformed to rgb space
 
     if "none" not in hparams["losses"]:
-        lam = hparams.pop("lambda")
+        lam = hparams.pop("lam")
         loss_in = hparams.pop("losses")
         if len(loss_in) != len(lam) and len(lam) > 1:
             raise ArgumentError(
-                message="The length of lambda values must equal that of losses argument"
+                message="The length of lam values must equal that of losses argument"
             )
         elif len(lam) <= 1:
             w = lam[0] if len(lam) > 0 else 1.0
