@@ -29,7 +29,7 @@ def _ssim_helper(
     k1: float = 0.01,
     k2: float = 0.03,
 ):
-    """Helper function for computing SSIM.
+    r"""Helper function for computing SSIM.
 
     SSIM estimates covariances with weighted sums.  The default parameters
     use a biased estimate of the covariance:
