@@ -131,8 +131,11 @@ def _ssim_per_channel(
     # INFO: removed assertive checks from tensorflow
     # TODO: See if ops.image.gaussian_blur can be used for this to improve performance
     kernel = _fspecial_gauss(kernel_size, filter_sigma)
-    kernel = ops.tile(kernel, repeats=[1, 1, shape1[-1], 1])
-
+    if K.image_data_format() == "channels_last":
+        kernel = ops.tile(kernel, repeats=[1, 1, shape1[-1], 1])
+    else:
+        kernel = ops.tile(kernel, repeats=[1, 1, shape1[-3], 1])
+    
     # The correct compensation factor is `1.0 - tf.reduce_sum(tf.square(kernel))`,
     # but to match MATLAB implementation of MS-SSIM, we use 1.0 instead.
     compensation = 1.0
@@ -155,7 +158,7 @@ def _ssim_per_channel(
     if return_index_map:
         ssim_val = luminance * cs
     else:
-        axes = ops.convert_to_tensor([-3, -2], dtype="int32")
+        axes = [-3, -2] if K.backend() == "channels_last" else [-2, -1]
         ssim_val = ops.mean(luminance * cs, axes)
         cs = ops.mean(cs, axes)
     return ssim_val, cs
