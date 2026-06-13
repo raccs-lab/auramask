@@ -92,10 +92,11 @@ torch-cpu = [
     "pyiqa>=0.1.15.post2",
 ]
 tf = [
-    "tensorflow>=2.20.0; sys_platform != 'darwin'",
+    "tensorflow[and-cuda]>=2.18.1; sys_platform != 'darwin'",
     "tensorflow~=2.18.0; sys_platform == 'darwin'",
     "tensorflow-metal>=1.2.0; sys_platform == 'darwin'",
 ]
+tf-cpu = ["tensorflow>=2.20.0"]
 
 [dependency-groups]
 dev = [
