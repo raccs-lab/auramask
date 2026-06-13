@@ -13,7 +13,6 @@ dependencies = [
     "datasets[vision]>=4.0.0",
     "keras>=3.0.0",
     "keras3-unets",
-    "numpy>=2.3.3",
     "pilgram2>=2.0.8",
     "softadapt>=0.1.2",
     "wandb>=0.21.3",
@@ -69,7 +68,7 @@ gpg_sign = true
 version_files = ["src/auramask/__version__.py"]
 
 [tool.uv]
-conflicts = [[{ extra = "torch" }, { extra = "torch-cpu" }]]
+conflicts = [[{ extra = "torch" }, { extra = "torch-cpu" }, {extra = "tf"}, {extra = "tf-cpu"}]]
 
 [tool.uv.sources]
 torch = [{ index = "pytorch", extra = "torch-cpu" }]
@@ -90,10 +89,14 @@ torch = [
 torch-cpu = [
     "torch>=2.8.0",
     "torchvision>=0.23.0",
-    "tensorflow>=2.20.0",
     "pyiqa>=0.1.15.post2",
 ]
-tf = ["tensorflow>=2.20.0"]
+tf = [
+    "tensorflow[and-cuda]>=2.18.1; sys_platform != 'darwin'",
+    "tensorflow~=2.18.0; sys_platform == 'darwin'",
+    "tensorflow-metal>=1.2.0; sys_platform == 'darwin'",
+]
+tf-cpu = ["tensorflow>=2.20.0"]
 
 [dependency-groups]
 dev = [
@@ -101,6 +104,8 @@ dev = [
     "pdoc3>=0.11.6",
     "pre-commit>=4.3.0",
     "ruff>=0.13.0",
-    "scikit-image>=0.25.2",
 ]
-test = ["pytest>=9.0.3"]
+test = [
+    "pytest>=9.0.3",
+    "scikit-image>=0.26.0",
+]
