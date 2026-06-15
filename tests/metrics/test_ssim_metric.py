@@ -3,40 +3,31 @@ from keras import ops, random, backend as K
 from skimage.metrics import structural_similarity as compare_ssim
 
 # Local imports - adjust paths according to your project structure
-from auramask.losses.ssim import SSIMC
+from auramask.metrics.ssim import SSIM
+
 
 # Set floating point precision tolerances (absolute 0 and relative 2%)
 @pytest.fixture
 def atol_rtol():
     return {"rtol": 0.05, "atol": 5e-7}
 
+
 @pytest.fixture
 def image_data_format(request):
     K.set_image_data_format(request.param)
     return request.param
 
+
 @pytest.mark.parametrize(
-    "image_data_format",
-    ["channels_last", "channels_first"],
-    indirect=True
+    "image_data_format", ["channels_last", "channels_first"], indirect=True
 )
-@pytest.mark.parametrize(
-    "img_shape",
-    [(224, 224), (256, 256), (64, 64), (512, 512)]
-)
-@pytest.mark.parametrize(
-    "noise",
-    [0.0, 0.1, 0.3]
-)
-@pytest.mark.parametrize(
-    "gaussian_sigma",
-    [0.1, 0.5, 1.0, 1.5]
-)
-@pytest.mark.parametrize(
-    "k_params",
-    [(0.01, 0.03), (0.02, 0.06), (0.03, 0.09)]
-)
-def test_ssim_noise_variations(image_data_format, img_shape, atol_rtol, noise, gaussian_sigma, k_params):
+@pytest.mark.parametrize("img_shape", [(224, 224), (256, 256), (64, 64), (512, 512)])
+@pytest.mark.parametrize("noise", [0.0, 0.1, 0.3])
+@pytest.mark.parametrize("gaussian_sigma", [0.1, 0.5, 1.0, 1.5])
+@pytest.mark.parametrize("k_params", [(0.01, 0.03), (0.02, 0.06), (0.03, 0.09)])
+def test_ssim_noise_variations(
+    image_data_format, img_shape, atol_rtol, noise, gaussian_sigma, k_params
+):
     """Parametrized test for SSIM with varying noise levels."""
     # Generate channels first or channels last images
     if image_data_format == "channels_first":
@@ -46,7 +37,7 @@ def test_ssim_noise_variations(image_data_format, img_shape, atol_rtol, noise, g
 
     k1, k2 = k_params
     img1 = random.uniform(img_shape, minval=0, maxval=1.0, dtype=K.floatx(), seed=123)
-    
+
     img2 = ops.clip(
         ops.add(
             img1,
@@ -62,7 +53,7 @@ def test_ssim_noise_variations(image_data_format, img_shape, atol_rtol, noise, g
         1.0,
     )
 
-    expected_ssim = 1 - compare_ssim(
+    expected_ssim = compare_ssim(
         ops.convert_to_numpy(img1),
         ops.convert_to_numpy(img2),
         data_range=1.0,
@@ -71,10 +62,12 @@ def test_ssim_noise_variations(image_data_format, img_shape, atol_rtol, noise, g
         gaussian_weights=True,
         use_sample_covariance=False,
         K1=k1,
-        K2=k2
+        K2=k2,
     )
 
-    actual_ssim = SSIMC(k1=k1, k2=k2, filter_sigma=gaussian_sigma, dtype=K.floatx())(ops.expand_dims(img1, 0), ops.expand_dims(img2, 0))
+    actual_ssim = SSIM(k1=k1, k2=k2, filter_sigma=gaussian_sigma, dtype=K.floatx())(
+        ops.expand_dims(img1, 0), ops.expand_dims(img2, 0)
+    )
 
     assert ops.allclose(expected_ssim, actual_ssim, **atol_rtol)
 
@@ -110,4 +103,3 @@ def test_ssim_noise_variations(image_data_format, img_shape, atol_rtol, noise, g
 #     expected_ssim = DSSIMObjective()(test_image_a, test_image_a)
 
 #     assert ops.allclose(t_ssim, expected_ssim, rtol=1e-3, atol=1e-4)
-
