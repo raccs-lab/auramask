@@ -2,13 +2,14 @@ import pytest
 from argparse import ArgumentParser
 
 # Assuming the module structure allows direct import of configuration functions:
-from auramask.cli.train import configure_parser, parse_args
+from auramask.cli.train import configure_parser, parse_args, initialize_loss, aurautils
+from auramask import losses as auraloss
+from keras import Loss, backend
+
 
 # =============================================================================
 # Setup Fixture
 # =============================================================================
-
-
 @pytest.fixture
 def parser():
     """Provides a mock ArgumentParser instance used for testing."""
@@ -94,7 +95,7 @@ def test_cli_parses_multiple_losses_with_explicit_lambda(
             parsed_args = parse_args(parser)
         except SystemExit as e:
             assert e.code == 2
-            pytest.exit()
+            return
 
         # Assert that parse_args failed
         assert False
@@ -104,3 +105,98 @@ def test_cli_parses_multiple_losses_with_explicit_lambda(
         # Expected successful parsing verification:
         assert parsed_args.losses == loss
         assert parsed_args.lam == lam
+
+
+# =============================================================================
+# Test Cases for Loss initialization
+# =============================================================================
+@pytest.mark.parametrize(
+    "losses",
+    [
+        "alex",
+        "vgg",
+        "squeeze",
+        "mse",
+        "mae",
+        "ssim",
+        "nima",
+        "exposure",
+        "color",
+        "illumination",
+        "spatial",
+        "style",
+        "content",
+        "variation",
+        "histogram",
+        "none",
+    ],
+)
+@pytest.mark.parametrize("lam", [0.1])
+def test_cli_loss_initializing_with_params(mocker, parser, losses, lam):
+    """
+    Tests successful loss initialization (excluding embeddings for now)
+    """
+
+    # Set up hparams to pass into initialization function
+    hparams = {
+        "F": None,
+        "threshold": False,
+        "rho": 0,
+        "metric": False,
+        "losses": [losses],
+        "lam": [lam],
+        "color_space": aurautils.constants.ColorSpaceEnum.RGB,
+        "lpips_spatial": False,
+        "style_ref": auraloss.StyleRefs.STARRYNIGHT,
+    }
+
+    configd_losses, weights, cs_transform, metrics = initialize_loss(hparams)
+
+    if losses != "none":
+        assert len(configd_losses) == 1  # Only initializing one loss
+        assert len(weights) == 1  # Only using a single weight
+        assert issubclass(configd_losses[0].__class__, Loss)
+        assert weights[0] == lam
+    else:
+        assert len(configd_losses) == 0  # no losses
+        assert len(weights) == 0  # no losses
+
+
+# =============================================================================
+# Test Cases for Loss initialization (Torch Only)
+# =============================================================================
+@pytest.mark.parametrize(
+    "losses",
+    ["lpips", "ssimc", "cwssim", "iqanima", "psnr", "topiq", "topiqnr", "ms_swd"],
+)
+@pytest.mark.parametrize("lam", [0.1, 0.5, 1.0])
+def test_cli_loss_initializing_with_params_torch(mocker, parser, losses, lam):
+    """
+    Tests successful loss initialization (excluding embeddings for now)
+    """
+
+    # Set up hparams to pass into initialization function
+    hparams = {
+        "F": None,
+        "threshold": False,
+        "rho": 0,
+        "metric": False,
+        "losses": [losses],
+        "lam": [lam],
+        "color_space": aurautils.constants.ColorSpaceEnum.RGB,
+        "lpips_spatial": False,
+        "style_ref": auraloss.StyleRefs.STARRYNIGHT,
+    }
+
+    if backend.backend() != "torch":
+        with pytest.raises(
+            Exception, match="IQA cannot be used in non-torch backend context"
+        ):
+            initialize_loss(hparams)
+    else:
+        configd_losses, weights, cs_transform, metrics = initialize_loss(hparams)
+
+        assert len(configd_losses) == 1  # Only initializing one loss
+        assert len(weights) == 1  # Only using a single weight
+        assert issubclass(configd_losses[0].__class__, Loss)
+        assert weights[0] == lam
