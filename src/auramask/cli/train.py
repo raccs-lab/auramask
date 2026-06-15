@@ -4,11 +4,7 @@ from keras.src.utils import file_utils
 import wandb
 import auramask
 from auramask import utils as aurautils
-from argparse import (
-    ArgumentParser,
-    FileType,
-    BooleanOptionalAction,
-)
+from argparse import ArgumentParser, FileType, BooleanOptionalAction, Namespace
 import json
 from ast import literal_eval
 
@@ -141,9 +137,7 @@ def configure_parser(parser: ArgumentParser):
     return parser
 
 
-def parse_args(parser: ArgumentParser):
-    args = parser.parse_args()
-
+def parse_args(parser: ArgumentParser, args: Namespace) -> Namespace:
     # Check if loss weights are appropriately sized
     if len(args.losses) != len(args.lam) and len(args.lam) > 1:
         parser.error(
