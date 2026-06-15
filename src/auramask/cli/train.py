@@ -4,12 +4,7 @@ from keras.src.utils import file_utils
 import wandb
 import auramask
 from auramask import utils as aurautils
-from argparse import (
-    ArgumentParser,
-    FileType,
-    BooleanOptionalAction,
-    ArgumentError,
-)
+from argparse import ArgumentParser, FileType, BooleanOptionalAction, Namespace
 import json
 from ast import literal_eval
 
@@ -64,14 +59,12 @@ def configure_parser(parser: ArgumentParser):
             "squeeze",
             "mse",
             "mae",
+            "ssim",
             "ssimc",
             "cwssim",
-            "dsssim",
-            "gsssim",
             "nima",
             "iqanima",
             "psnr",
-            "ffl",
             "exposure",
             "color",
             "illumination",
@@ -87,7 +80,7 @@ def configure_parser(parser: ArgumentParser):
         ],
         nargs="+",
     )
-    parser.add_argument("-l", "--lambda", type=float, default=[1.0], nargs="+")
+    parser.add_argument("-l", "--lam", type=float, default=[1.0], nargs="+")
     parser.add_argument(
         "--adaptive-loss",
         type=str,
@@ -144,8 +137,12 @@ def configure_parser(parser: ArgumentParser):
     return parser
 
 
-def parse_args(parser):
-    args = parser.parse_args()
+def parse_args(parser: ArgumentParser, args: Namespace) -> Namespace:
+    # Check if loss weights are appropriately sized
+    if len(args.losses) != len(args.lam) and len(args.lam) > 1:
+        parser.error(
+            f"The length of lam values must equal that of losses argument. lam={len(args.lam)} != losses={len(args.losses)}"
+        )
 
     from json import load
 
@@ -216,13 +213,9 @@ def initialize_loss(hparams: dict):
             )  # Determine if it needs to be transformed to rgb space
 
     if "none" not in hparams["losses"]:
-        lam = hparams.pop("lambda")
+        lam = hparams.pop("lam")
         loss_in = hparams.pop("losses")
-        if len(loss_in) != len(lam) and len(lam) > 1:
-            raise ArgumentError(
-                message="The length of lambda values must equal that of losses argument"
-            )
-        elif len(lam) <= 1:
+        if len(lam) <= 1:
             w = lam[0] if len(lam) > 0 else 1.0
             iters = zip(loss_in, [w] * len(loss_in))
         else:
@@ -235,17 +228,14 @@ def initialize_loss(hparams: dict):
             elif loss_i == "mae":
                 tmp_loss = keras.losses.MeanAbsoluteError()
                 cs_transforms.append(False)
+            elif loss_i == "ssim":
+                tmp_loss = auramask.losses.SSIMC()
+                cs_transforms.append(False)
             elif loss_i == "ssimc":
                 tmp_loss = auramask.losses.IQASSIMC()
                 cs_transforms.append(False)
             elif loss_i == "cwssim":
                 tmp_loss = auramask.losses.IQACWSSIM()
-                cs_transforms.append(False)
-            elif loss_i == "dsssim":
-                tmp_loss = auramask.losses.DSSIMObjective()
-                cs_transforms.append(False)
-            elif loss_i == "gsssim":
-                tmp_loss = auramask.losses.GRAYSSIMObjective()
                 cs_transforms.append(False)
             elif loss_i == "nima":
                 tmp_loss = auramask.losses.AestheticLoss(

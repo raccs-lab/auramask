@@ -251,7 +251,8 @@ def ssim(
     # Compute average over color channels.
     return ops.mean(ssim_per_channel, [-1])
 
-
+# @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
+# TODO: Implement depreciation warnings for python versions before and after 3.14
 class DSSIMObjective(Loss):
     """Difference of Structural Similarity (DSSIM loss function).
     Clipped between 0 and 0.5
@@ -317,7 +318,8 @@ class DSSIMObjective(Loss):
         ssim = ops.mean(ops.divide(ops.subtract(1.0, ssim), 2.0))
         return ssim
 
-
+# @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
+# TODO: Implement depreciation warnings for python versions before and after 3.14
 class GRAYSSIMObjective(DSSIMObjective):
     def __init__(
         self,
@@ -338,6 +340,15 @@ class GRAYSSIMObjective(DSSIMObjective):
 
 
 class SSIMC(Loss):
+    """Loss wrapper around the `ssim` computation function.
+
+    # Arguments
+        k1: Parameter of the SSIM (default 0.01)
+        k2: Parameter of the SSIM (default 0.03)
+        kernel_size: Size of the sliding window (default 11)
+        filter_sigma: Sigma of the gaussian filter (default 1.5)
+        max_value: Max value of the output (default 1.0)
+    """
     def __init__(
         self,
         name="SSIMC",
@@ -391,7 +402,8 @@ class IQASSIMC(Loss):
             y_pred = ops.moveaxis(y_pred, -1, 1)
         return 1 - self.model(ref=y_true, target=y_pred)
 
-
+# @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
+# TODO: Implement depreciation warnings for python versions before and after 3.14
 class IQACWSSIM(Loss):
     def __init__(
         self,

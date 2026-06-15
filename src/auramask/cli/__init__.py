@@ -57,13 +57,14 @@ def configure_parser():
     return parser
 
 
+# TODO: Probably best to make into CLI classes/subclasses
 def main():
     parser = configure_parser()
     hparams = parser.parse_args()
     if hparams.command == "train":
-        from json import load
-
-        hparams.model_config = load(hparams.model_config)
+        train_cli.parse_args(parser, hparams)
+    elif hparams.command == "test":
+        pass  # no specialized parsing needed
     hparams = hparams.__dict__
     action = hparams.pop("command")
 
