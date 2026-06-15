@@ -8,7 +8,6 @@ from argparse import (
     ArgumentParser,
     FileType,
     BooleanOptionalAction,
-    ArgumentError,
 )
 import json
 from ast import literal_eval
@@ -145,8 +144,14 @@ def configure_parser(parser: ArgumentParser):
     return parser
 
 
-def parse_args(parser):
+def parse_args(parser: ArgumentParser):
     args = parser.parse_args()
+
+    # Check if loss weights are appropriately sized
+    if len(args.losses) != len(args.lam) and len(args.lam) > 1:
+        parser.error(
+            f"The length of lam values must equal that of losses argument. lam={len(args.lam)} != losses={len(args.losses)}"
+        )
 
     from json import load
 
@@ -219,11 +224,7 @@ def initialize_loss(hparams: dict):
     if "none" not in hparams["losses"]:
         lam = hparams.pop("lam")
         loss_in = hparams.pop("losses")
-        if len(loss_in) != len(lam) and len(lam) > 1:
-            raise ArgumentError(
-                message="The length of lam values must equal that of losses argument"
-            )
-        elif len(lam) <= 1:
+        if len(lam) <= 1:
             w = lam[0] if len(lam) > 0 else 1.0
             iters = zip(loss_in, [w] * len(loss_in))
         else:
