@@ -49,6 +49,7 @@ def configure_parser(parser: argparse.ArgumentParser):
             "mae",
             "lpips",
             "alex",
+            "ssim",
             "ssimc",
             "dssim",
             "topiq_fr",
@@ -88,12 +89,6 @@ def configure_parser(parser: argparse.ArgumentParser):
         nargs=3,
         help="(Optional) The config, split, and column that maps to precomputed images.",
     )
-
-
-def parse_args(parser: argparse.ArgumentParser):
-    args = parser.parse_args()
-
-    return args
 
 
 def load_model() -> keras.Model:
@@ -136,7 +131,7 @@ def load_model() -> keras.Model:
     return model
 
 
-def initialize_metrics() -> list[keras.Metric]:
+def initialize_metrics(hparams: dict) -> list[keras.Metric]:
     metrics = []
     metric_config = {}
 
@@ -296,29 +291,16 @@ def load_dataset() -> datasets.Dataset:
     return ds
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        prog="AuraMask Evaluation",
-        description="Evaluation interface for AuraMask toolkit.",
-    )
-    configure_parser(parser)
-    hparams.update(parse_args().__dict__)
+def apply_params(hparams: dict):
     dims = hparams.pop("dims")
     hparams["input"] = (dims, dims)
-    logdir = hparams.pop("log_dir")
-    note = hparams.pop("note")
-
-    if note:
-        note = input("Note for Run:")
-    else:
-        note = ""
 
     wandb.init(
         project="auramask",
         id=os.getenv("WANDB_RUN_ID", None),
-        dir=logdir,
+        dir=hparams["logdir"],
         name=os.getenv("WANDB_RUN_NAME", None),
-        notes=note,
+        notes=hparams["note"],
         resume="allow",
         job_type="evaluation",
         group=os.getenv("SLURM_JOB_NAME", None),
@@ -326,7 +308,7 @@ def main():
 
     ds = load_dataset()
 
-    metrics = initialize_metrics()
+    metrics = initialize_metrics(hparams=hparams)
 
     if hparams["predictions"]:
         model = None
