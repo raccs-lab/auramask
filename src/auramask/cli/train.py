@@ -66,12 +66,9 @@ def configure_parser(parser: ArgumentParser):
             "ssim",
             "ssimc",
             "cwssim",
-            "dsssim",
-            "gsssim",
             "nima",
             "iqanima",
             "psnr",
-            "ffl",
             "exposure",
             "color",
             "illumination",
@@ -245,12 +242,6 @@ def initialize_loss(hparams: dict):
                 cs_transforms.append(False)
             elif loss_i == "cwssim":
                 tmp_loss = auramask.losses.IQACWSSIM()
-                cs_transforms.append(False)
-            elif loss_i == "dsssim":
-                tmp_loss = auramask.losses.DSSIMObjective()
-                cs_transforms.append(False)
-            elif loss_i == "gsssim":
-                tmp_loss = auramask.losses.GRAYSSIMObjective()
                 cs_transforms.append(False)
             elif loss_i == "nima":
                 tmp_loss = auramask.losses.AestheticLoss(
