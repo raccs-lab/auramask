@@ -1,29 +1,34 @@
-from typing import Dict, Optional, Any
-
 import wandb
-from wandb.integration.keras import (
-    WandbEvalCallback,
-)
-from wandb.integration.keras.callbacks.model_checkpoint import SaveStrategy
+from wandb.sdk.lib import telemetry
+
 from keras import preprocessing, ops
+from keras.callbacks import Callback
 
 
-class AuramaskCallback(WandbEvalCallback):
+class AuramaskCallback(Callback):
     def __init__(
         self,
         validation_data,
-        data_table_columns,
-        pred_table_columns,
         num_samples=100,
         log_freq=1,
-    ):
-        super().__init__(
-            data_table_columns=data_table_columns, pred_table_columns=pred_table_columns
-        )
+        *args,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+
+        # From wandb.integration.keras.callbacks.tables_builder.py
+        if wandb.run is None:
+            raise wandb.Error(
+                "You must call `wandb.init()` first before using this callback."
+            )
+
+        with telemetry.context(run=wandb.run) as tel:
+            tel.feature.keras_wandb_eval_callback = True
+
         self.x = validation_data[:num_samples]
         self.log_freq = log_freq
 
-    def on_train_begin(self, logs: Optional[Dict[str, Any]] = None) -> None:
+    def on_train_begin(self, logs: dict | None = None) -> None:
         if wandb.run.step > 1:
             pass
         else:
@@ -39,9 +44,7 @@ class AuramaskCallback(WandbEvalCallback):
                 step=0,
             )
 
-    def on_epoch_end(
-        self, epoch: int, logs: Dict[SaveStrategy, float] | None = None
-    ) -> None:
+    def on_epoch_end(self, epoch: int, logs: dict | None = None) -> None:
         if epoch % self.log_freq == 0:
             self.save_results()
 
@@ -88,13 +91,5 @@ class AuramaskCallback(WandbEvalCallback):
                 step=wandb.run.step,
             )
 
-    def add_ground_truth(self, logs: Dict[str, float] | None = None) -> None:
-        pass
-
-    def add_model_predictions(
-        self, epoch: int, logs: Dict[str, float] | None = None
-    ) -> None:
-        pass
-
-    def on_train_end(self, logs: Dict[str, float] | None = None) -> None:
+    def on_train_end(self, logs: dict | None = None) -> None:
         self.save_results()
