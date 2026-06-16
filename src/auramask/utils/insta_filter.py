@@ -1,8 +1,8 @@
 from enum import Enum
 import pilgram2 as pilgram
-from PIL.Image import Image
+import numpy as np
 from albumentations import CLAHE
-from keras import utils
+from keras.utils import array_to_img, img_to_array
 
 
 class InstaFilterEnum(Enum):
@@ -47,16 +47,12 @@ class InstaFilterEnum(Enum):
     WILLOW = 38
     XPRO2 = 39
 
-    def filter_transform(self, features: list[Image]):
-        batch = {}
+    def filter_transform(self, images: np.ndarray) -> dict[str, np.ndarray]:
         fn = getattr(pilgram, self.name.lower())
         clahe = CLAHE(clip_limit=1.0, tile_grid_size=(8, 8))
-        batch["image"] = [
-            utils.array_to_img(
-                clahe(image=utils.img_to_array(f, dtype="uint8"))["image"]
-            )
-            for f in features
-            # autocontrast(f, preserve_tone=True) for f in features
-        ]
-        batch["target"] = [fn(f) for f in batch["image"]]
+        batch = {"image": None, "target": None}
+        batch["image"] = np.stack([clahe(image=ex)["image"] for ex in images])
+        batch["target"] = np.stack(
+            [img_to_array(fn(array_to_img(f)), dtype="uint8") for f in batch["image"]]
+        )
         return batch
