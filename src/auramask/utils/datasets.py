@@ -123,10 +123,13 @@ class DatasetEnum(Enum):
         if prefilter:
 
             def transform_train(examples: dict):
-                examples.update(prefilter(examples["image"]))
+                if isinstance(examples, np.ndarray):
+                    examples = prefilter(np.astype(examples, np.uint8))
+
                 examples = DatasetEnum.data_collater(
                     examples, {"w": dims[0], "h": dims[1]}
                 )
+
                 augmenters = self.get_augmenters(
                     {"augs_per_image": 1, "rate": 0.5},
                     {"augs_per_image": 1, "rate": 0.2, "magnitude": 0.5},
@@ -138,7 +141,9 @@ class DatasetEnum(Enum):
                 return examples
 
             def transform_test(examples):
-                examples.update(prefilter(examples["image"]))
+                if isinstance(examples, np.ndarray):
+                    examples = prefilter(np.astype(examples, np.uint8))
+
                 examples = DatasetEnum.data_collater(
                     examples, {"w": dims[0], "h": dims[1]}
                 )
