@@ -1,3 +1,17 @@
+## v1.2.1 (2026-06-16)
+
+### Fix
+
+- **utils/datasets.py,insta_filter.py**: change collater function for visual transforms to fix crashing
+- **cli/train.py**: remove unused table arguments to callback
+- **callbacks/metriclogger.py**: remove reliance on tensorflow.keras
+- **callbacks/evaluate.py**: remove reliance on wandb keras integration
+
+### Refactor
+
+- **callbacks/softadapt.py,stop_on_nan.py**: remove full callbacks import and instead import specific class
+- **callbacks/checkpoint.py**: remove wandb keras integration import that was unused and avoid use of superfluous typing imports
+
 ## v1.2.0 (2026-06-15)
 
 ### BREAKING CHANGE
