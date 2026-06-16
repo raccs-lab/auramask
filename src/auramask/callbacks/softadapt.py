@@ -1,9 +1,9 @@
 from keras import ops, backend as K
 from typing import Literal
-from softadapt import callbacks
+from softadapt.callbacks import AdaptiveLossCallback
 
 
-class AdaptiveLossCallback(callbacks.AdaptiveLossCallback):
+class AdaptiveLossCallback(AdaptiveLossCallback):
     def __init__(
         self,
         components: list[str],
