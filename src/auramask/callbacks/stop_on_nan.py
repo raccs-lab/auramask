@@ -1,9 +1,9 @@
 import numpy as np
 import wandb
-from keras import callbacks
+from keras.callbacks import TerminateOnNaN
 
 
-class AuramaskStopOnNaN(callbacks.TerminateOnNaN):
+class AuramaskStopOnNaN(TerminateOnNaN):
     def __init__(self):
         super().__init__()
 

@@ -426,8 +426,6 @@ def init_callbacks(hparams: dict, sample, logdir, note: str = ""):
     train_callbacks.append(
         auramask.callbacks.AuramaskCallback(
             validation_data=sample,
-            data_table_columns=["idx", "orig", "aug"],
-            pred_table_columns=["epoch", "idx", "pred", "mask"],
             log_freq=int(os.getenv("AURAMASK_LOG_FREQ", 5)),
         )
     )
