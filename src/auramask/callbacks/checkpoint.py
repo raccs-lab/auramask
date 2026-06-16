@@ -1,12 +1,11 @@
 from os import PathLike, path
 import string
-from typing import Any, Dict, List, Literal, Optional
+from typing import Literal
 
 import wandb
 from wandb.sdk.lib import telemetry
 
 from keras import callbacks
-from wandb.integration.keras.callbacks.model_checkpoint import SaveStrategy
 
 
 class AuramaskCheckpoint(callbacks.ModelCheckpoint):
@@ -21,7 +20,7 @@ class AuramaskCheckpoint(callbacks.ModelCheckpoint):
         save_freq: int = 1,
         freq_mode: Literal["batch"] | Literal["epoch"] = "epoch",
         initial_value_threshold: float | None = None,
-        **kwargs: Any,
+        **kwargs,
     ) -> None:
         # self._bk_filepath = filepath
         if save_weights_only:
@@ -70,27 +69,23 @@ class AuramaskCheckpoint(callbacks.ModelCheckpoint):
         self.__freq = save_freq
         self.__cur_epoch = 0
 
-    def on_train_begin(self, logs=None):
+    def on_train_begin(self, logs: dict | None = None) -> None:
         super().on_train_begin(logs)
         # if self.model.name == "AuraMask":
         #     self.train_wrapper = self.model
         #     self.set_model(self.model.model)
 
-    def on_epoch_end(
-        self, epoch: int, logs: Dict[SaveStrategy, float] | None = None
-    ) -> None:
+    def on_epoch_end(self, epoch: int, logs: dict | None = None) -> None:
         if self.save_freq == "epoch":
             # self.train_wrapper.save(os.path.join(self._bk_filepath, "training_state.keras"), overwrite=True)
             if epoch > 0 and epoch % self.__freq == 0:
                 self._on_epoch_end(epoch, logs)
         self.__cur_epoch = epoch
 
-    def on_train_end(self, logs: Dict[SaveStrategy, float] | None = None) -> None:
+    def on_train_end(self, logs: dict | None = None) -> None:
         self._on_epoch_end(self.__cur_epoch, logs)
 
-    def on_train_batch_end(
-        self, batch: int, logs: Optional[Dict[str, float]] = None
-    ) -> None:
+    def on_train_batch_end(self, batch: int, logs: dict | None = None) -> None:
         if self._should_save_on_batch(batch):
             # Save the model and get filepath
             self._save_model(epoch=self._current_epoch, batch=batch, logs=logs)
@@ -101,9 +96,7 @@ class AuramaskCheckpoint(callbacks.ModelCheckpoint):
             aliases = ["latest", f"epoch_{self._current_epoch}_batch_{batch}"]
             self._log_ckpt_as_artifact(filepath, aliases=aliases)
 
-    def _on_epoch_end(
-        self, epoch: int, logs: Optional[Dict[str, float]] = None
-    ) -> None:
+    def _on_epoch_end(self, epoch: int, logs: dict | None = None) -> None:
         super().on_epoch_end(epoch, logs)
         # Check if model checkpoint is created at the end of epoch.
         if self.save_freq == "epoch":
@@ -114,7 +107,7 @@ class AuramaskCheckpoint(callbacks.ModelCheckpoint):
             self._log_ckpt_as_artifact(filepath, aliases=aliases)
 
     def _log_ckpt_as_artifact(
-        self, filepath: str, aliases: Optional[List[str]] = None
+        self, filepath: str, aliases: list[str] | None = None
     ) -> None:
         """Log model checkpoint as  W&B Artifact."""
         try:
