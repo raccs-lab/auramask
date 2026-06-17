@@ -2,11 +2,12 @@ from enum import Enum
 import os
 from typing import Callable, TypedDict
 from datasets import load_dataset, Dataset
-from keras import backend as K
+from keras import backend as K, utils
 from auramask.utils import preprocessing
 from os import cpu_count
 import numpy as np
 from albumentations import CLAHE
+from PIL import Image
 
 
 class DatasetEnum(Enum):
@@ -108,6 +109,32 @@ class DatasetEnum(Enum):
             "target": y,
         }
 
+    @staticmethod
+    def transform_collection(examples: dict | list | np.ndarray) -> dict:
+        if isinstance(examples, np.ndarray):
+            examples = {"image": np.astype(examples, np.uint8)}
+        elif isinstance(examples, dict):
+            try:
+                assert "image" in examples.keys()
+                if isinstance(examples["image"], list):
+                    if isinstance(examples["image"][0], Image.Image):
+                        examples["image"] = np.stack(
+                            [
+                                utils.img_to_array(im, dtype="uint8")
+                                for im in examples["image"]
+                            ]
+                        )
+                elif examples["image"].dtype != np.uint8:
+                    examples["image"] = np.astype(examples["image"], np.uint8)
+            except Exception as e:
+                raise e
+        elif isinstance(examples, list):
+            raise ValueError(f"Format {examples} is not supported.")
+        else:
+            raise ValueError(f"Format {type(examples)} is not supported.")
+
+        return examples
+
     def load_dataset(
         self,
         dims: tuple[int, int],
@@ -123,8 +150,8 @@ class DatasetEnum(Enum):
         if prefilter:
 
             def transform_train(examples: dict):
-                if isinstance(examples, np.ndarray):
-                    examples = prefilter(np.astype(examples, np.uint8))
+                examples = self.transform_collection(examples)
+                examples = prefilter(examples["image"])
 
                 examples = DatasetEnum.data_collater(
                     examples, {"w": dims[0], "h": dims[1]}
@@ -141,8 +168,8 @@ class DatasetEnum(Enum):
                 return examples
 
             def transform_test(examples):
-                if isinstance(examples, np.ndarray):
-                    examples = prefilter(np.astype(examples, np.uint8))
+                examples = self.transform_collection(examples)
+                examples = prefilter(examples["image"])
 
                 examples = DatasetEnum.data_collater(
                     examples, {"w": dims[0], "h": dims[1]}
@@ -151,8 +178,7 @@ class DatasetEnum(Enum):
         else:
 
             def transform_train(examples):
-                if isinstance(examples, np.ndarray):
-                    examples = {"image": np.astype(examples, np.uint8)}
+                examples = self.transform_collection(examples)
 
                 clahe = CLAHE(clip_limit=1.0, tile_grid_size=(8, 8))
 
@@ -173,8 +199,8 @@ class DatasetEnum(Enum):
                 return examples
 
             def transform_test(examples):
-                if isinstance(examples, np.ndarray):
-                    examples = {"image": np.astype(examples, np.uint8)}
+                examples = self.transform_collection(examples)
+
                 examples = DatasetEnum.data_collater(
                     examples, {"w": dims[0], "h": dims[1]}
                 )
@@ -182,33 +208,31 @@ class DatasetEnum(Enum):
                     examples["target"] = np.copy(examples["image"])
                 return examples
 
-        ds["train"] = (
-            ds["train"]
-            .to_iterable_dataset(num_shards=int(os.getenv("DL_TRAIN_WORKERS", 8)))
-            .select_columns(self.value[2])
-            .with_format("numpy")
-            .map(
-                transform_train,
-                batched=True,
-                batch_size=batch,
-                input_columns=self.value[2],
-            )
-            .shuffle(buffer_size=10_000)
-        )
-        ds["test"] = (
-            ds["test"]
-            .to_iterable_dataset(num_shards=int(os.getenv("DL_TEST_WORKERS", 8)))
-            .select_columns(self.value[2])
-            .with_format("numpy")
-            .map(
-                transform_test,
-                batched=True,
-                batch_size=batch,
-                input_columns=self.value[2],
-            )
-        )
-
         if K.backend() == "torch":
+            ds["train"] = (
+                ds["train"]
+                .to_iterable_dataset(num_shards=int(os.getenv("DL_TRAIN_WORKERS", 8)))
+                .select_columns(self.value[2])
+                .with_format("numpy")
+                .map(
+                    transform_train,
+                    batched=True,
+                    batch_size=batch,
+                )
+                .shuffle(buffer_size=10_000)
+            )
+            ds["test"] = (
+                ds["test"]
+                .to_iterable_dataset(num_shards=int(os.getenv("DL_TEST_WORKERS", 8)))
+                .select_columns(self.value[2])
+                .with_format("numpy")
+                .map(
+                    transform_test,
+                    batched=True,
+                    batch_size=batch,
+                )
+            )
+
             from torch.utils.data import DataLoader, _utils
 
             # TODO: `collate_fn` implementation is potentially fragile as it uses private part of pytorch library
@@ -221,66 +245,26 @@ class DatasetEnum(Enum):
                 batch_size=batch,
                 collate_fn=lambda x: tuple(_utils.collate.default_collate(x).values()),
             )
-
-    def _load_data_torch(
-        self,
-        train_ds: Dataset,
-        test_ds: Dataset,
-        batch: int,
-        train_t: Callable,
-        test_t: Callable,
-    ):
-        from torch.utils.data import DataLoader
-
-        def collate_train(examples: list[dict]):
-            examples = {k: [dic[k] for dic in examples] for k in examples[0]}
-            examples = train_t(examples)
-            return (examples["image"], examples["target"])
-
-        train_ds = DataLoader(
-            train_ds,
-            batch,
-            drop_last=True,
-            collate_fn=collate_train,
-            num_workers=int(os.getenv("DL_TRAIN_WORKERS", 8)),
-        )
-
-        def collate_test(examples: list[dict]):
-            examples = {k: [dic[k] for dic in examples] for k in examples[0]}
-            examples = test_t(examples)
-            return (examples["image"], examples["target"])
-
-        test_ds = DataLoader(
-            test_ds,
-            batch,
-            drop_last=True,
-            collate_fn=collate_test,
-            num_workers=int(os.getenv("DL_TEST_WORKERS", 8)),
-        )
-
-        return train_ds, test_ds
-
-    def _load_data_tf(self, train_ds: Dataset, test_ds: Dataset, batch: int):
-        train_ds = train_ds.to_tf_dataset(
-            columns=self.value[2],
-            batch_size=batch,
-            collate_fn=self.data_collater,
-            # collate_fn_args={"args": {"w": dim[0], "h": dim[1]}},
-            prefetch=False,
-            shuffle=True,
-            drop_remainder=True,
-        )
-
-        test_ds = (
-            test_ds.to_tf_dataset(
-                columns=self.value[2],
-                batch_size=batch,
-                collate_fn=self.data_collater,
-                # collate_fn_args={"args": {"w": dim[0], "h": dim[1]}},
-                prefetch=True,
-                drop_remainder=True,
+        elif K.backend() == "tensorflow":
+            ds["train"] = (
+                ds["train"]
+                .select_columns(self.value[2])
+                .with_transform(transform_train)
             )
-            .cache()
-            .prefetch(-1)
-        )
-        return train_ds, test_ds
+            ds["test"] = (
+                ds["test"].select_columns(self.value[2]).with_transform(transform_test)
+            )
+
+            # TODO tensorflow implementation
+            return ds["train"].to_tf_dataset(
+                columns="image",
+                batch_size=batch,
+                label_cols="target",
+                shuffle=True,
+            ), ds["test"].to_tf_dataset(
+                columns="image", batch_size=batch, label_cols="target", shuffle=False
+            ).cache().prefetch(-1)
+        else:
+            raise NotImplementedError(
+                f"Backend of type {K.backend()} not yet supported."
+            )

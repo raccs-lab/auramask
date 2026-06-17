@@ -382,11 +382,16 @@ def initialize_model(hparams: dict):
 
 def get_sample_data(ds):
     if keras.backend.backend() == "tensorflow":
-        for x in ds.take(1):
-            inp = x[0]
+        for batch in ds.take(1):
+            inp = batch[0]
+            # keras.utils.array_to_img(keras.ops.convert_to_numpy(inp[0])).save("input.png")
+            # keras.utils.array_to_img(keras.ops.convert_to_numpy(batch[1][0])).save("target.png")
+            break
     else:
         for batch in ds:
             inp = batch[0]
+            # keras.utils.array_to_img(keras.ops.convert_to_numpy(inp[0])).save("input.png")
+            # keras.utils.array_to_img(keras.ops.convert_to_numpy(batch[1][0])).save("target.png")
             break
 
     return inp
@@ -473,9 +478,10 @@ def apply_params(hparams: dict):
     t_ds, v_ds = load_data(hparams)
     v = get_sample_data(v_ds)
 
-    # On resume, make sure the iterable dataset is shuffled according to the HF scheme
-    t_ds.dataset.set_epoch(epoch)
-    v_ds.dataset.set_epoch(0)
+    if keras.backend.backend() == "torch":
+        # On resume, make sure the iterable dataset is shuffled according to the HF scheme
+        t_ds.dataset.set_epoch(epoch)
+        v_ds.dataset.set_epoch(0)
     model(v)
 
     callbacks.extend(init_callbacks(hparams, v, hparams.pop("log_dir"), note))
