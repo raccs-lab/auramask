@@ -1,3 +1,13 @@
+## v1.2.2 (2026-06-17)
+
+### BREAKING CHANGE
+
+- Closes #82
+
+### Fix
+
+- **cli/train.py,utils/datasets.py**: implement tensorflow dataset loading
+
 ## v1.2.1 (2026-06-16)
 
 ### Fix
