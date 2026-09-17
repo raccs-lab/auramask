@@ -1,4 +1,4 @@
-from keras import Model, utils, layers, backend, ops
+from keras import Model, backend, layers, ops, utils
 
 if backend.backend() == "tensorflow":
     from tensorflow import nn

@@ -1,5 +1,6 @@
 # Imports
 from keras import metrics
+
 from auramask.models.face_embeddings import FaceEmbedEnum
 from auramask.utils.distance import (
     cosine_distance,

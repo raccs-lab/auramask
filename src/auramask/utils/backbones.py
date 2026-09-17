@@ -1,9 +1,11 @@
+from collections.abc import Callable
 from enum import Enum
-from types import NoneType, FunctionType
+
 from keras import Input, backend, layers
 from keras.src.applications.imagenet_utils import obtain_input_shape
 from keras_unet_collection import models as unet_models
-from auramask.models import zero_dce, reface_unet, zero_dce_auramask, auramask
+
+from auramask.models import auramask, reface_unet, zero_dce, zero_dce_auramask
 
 
 class BaseModels(Enum):
@@ -20,10 +22,10 @@ class BaseModels(Enum):
         self,
         model_config: dict,
         input_shape: tuple,
-        name: str = None,
-        preprocess: FunctionType | NoneType = None,
-        activation_fn: FunctionType | str | NoneType = None,
-        post_processing: FunctionType | NoneType = None,
+        name: str | None = None,
+        preprocess: Callable | None = None,
+        activation_fn: Callable | str | None = None,
+        post_processing: Callable | None = None,
     ):
         input_shape = obtain_input_shape(
             input_shape,
@@ -33,7 +35,7 @@ class BaseModels(Enum):
             require_flatten=False,
         )
 
-        inputs = Input(shape=input_shape, name="{}_input".format(name))
+        inputs = Input(shape=input_shape, name=f"{name}_input")
 
         # Integrated preprocessing (e.g., color transform, scaling, normalizing)
         if preprocess:

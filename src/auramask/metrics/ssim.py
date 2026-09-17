@@ -1,4 +1,5 @@
 from keras import metrics, ops
+
 from auramask.losses.ssim import ssim
 from auramask.metrics.pyiqa import IQAMetric
 
@@ -36,27 +37,29 @@ def dssim(y_true, y_pred, kernel_size, c1, c2):
     ssim = ops.mean(ops.divide(ops.subtract(1.0, ssim), 2.0), axis=[1, 2])
     return ssim
 
+
 class SSIM(metrics.MeanMetricWrapper):
     def __init__(
         self,
-        k1: float=0.01,
-        k2: float=0.03,
-        kernel_size: int=11,
-        filter_sigma: float=1.5,
-        max_val: float =1.0,
+        k1: float = 0.01,
+        k2: float = 0.03,
+        kernel_size: int = 11,
+        filter_sigma: float = 1.5,
+        max_val: float = 1.0,
         name="SSIM",
         **kwargs,
     ):
         super().__init__(
             name=name,
             fn=ssim,
-            k1 = k1,
-            k2 = k2,
+            k1=k1,
+            k2=k2,
             kernel_size=kernel_size,
-            filter_sigma = filter_sigma,
+            filter_sigma=filter_sigma,
             max_val=max_val,
             **kwargs,
         )
+
 
 class DSSIMObjective(metrics.MeanMetricWrapper):
     def __init__(

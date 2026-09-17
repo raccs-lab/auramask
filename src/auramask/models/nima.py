@@ -1,11 +1,10 @@
 from typing import Literal
-from keras import layers, Model, applications, utils
+
+from keras import Model, applications, layers, utils
 
 
 def NIMA(
-    backbone: Literal["mobilenet"]
-    | Literal["nasnetmobile"]
-    | Literal["inceptionresnetv2"],
+    backbone: Literal["mobilenet", "nasnetmobile", "inceptionresnetv2"],
     rescale: bool = True,
 ):
     """_summary_
@@ -55,7 +54,7 @@ def NIMA(
     x = layers.Dropout(0.75)(base_model.output)
     x = layers.Dense(10, activation="softmax")(x)
 
-    model = Model(inp, x, name="NIMA-%s" % (backbone))
+    model = Model(inp, x, name=f"NIMA-{backbone}")
     model.load_weights(weight_path)
     model.trainable = False
 

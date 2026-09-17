@@ -1,4 +1,4 @@
-from keras import Loss, layers, applications, Model, ops, losses
+from keras import Loss, Model, applications, layers, losses, ops
 
 
 class ContentLoss(Loss):
@@ -19,7 +19,7 @@ class ContentLoss(Loss):
         if "model_obj" not in globals():
             model_obj = {}
 
-        if "vgg19" not in model_obj.keys():
+        if "vgg19" not in model_obj:
             inp = layers.Input(shape=(None, None, 3))
             x = applications.vgg19.preprocess_input(inp)
             model = applications.VGG19(

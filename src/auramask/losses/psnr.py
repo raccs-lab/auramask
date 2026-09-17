@@ -1,4 +1,5 @@
-from keras import Loss, ops, backend as K
+from keras import Loss, ops
+from keras import backend as K
 
 
 class IQAPSNR(Loss):

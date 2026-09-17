@@ -1,9 +1,9 @@
 from typing import Literal
-import wandb
-from wandb.sdk.lib import telemetry
 
+import wandb
 from keras import ops
 from keras.callbacks import Callback
+from wandb.sdk.lib import telemetry
 
 LogStrategy = Literal["epoch", "batch"]
 

@@ -1,5 +1,5 @@
 import keras
-from typing import Optional
+
 from auramask import callbacks as callbacks
 from auramask import layers as layers
 from auramask import losses as losses
@@ -8,7 +8,7 @@ from auramask import models as models
 from auramask import utils as utils
 
 
-def AuraMask(config: dict, weights: Optional[str] = None):
+def AuraMask(config: dict, weights: str | None = None):
     eps = config["epsilon"]
     base_model: utils.constants.BaseModels = utils.constants.BaseModels[
         config["model"].upper()

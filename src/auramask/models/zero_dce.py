@@ -1,12 +1,13 @@
-from types import FunctionType, NoneType
-from keras import layers, Model, backend, utils, ops, KerasTensor
+from collections.abc import Callable
+
+from keras import KerasTensor, Model, backend, layers, ops, utils
 
 
 def build_dce_net(
-    input_shape: tuple | NoneType = None,
-    input_tensor: KerasTensor | NoneType = None,
+    input_shape: tuple | None = None,
+    input_tensor: KerasTensor | None = None,
     filters: int = 32,
-    layer_activations: str | FunctionType = "relu",
+    layer_activations: str | Callable = "relu",
     kernel_size=(3, 3),
     strides=(1, 1),
     padding="same",

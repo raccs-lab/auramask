@@ -1,11 +1,13 @@
 from enum import Enum
 from typing import Literal
-from keras import layers, backend, KerasTensor
+
+from keras import KerasTensor, backend, layers
 
 from auramask.models.arcface import ArcFace
-from auramask.models.facenet import FaceNet
 from auramask.models.deepid import DeepID
+from auramask.models.facenet import FaceNet
 from auramask.models.vggface import VggFace
+
 # from auramask.models.openface import OpenFace
 # from auramask.utils.preprocessing import rgb_to_bgr
 
@@ -87,9 +89,7 @@ class FaceEmbedEnum(str, Enum):
 
     def get_threshold(
         self,
-        distance: Literal["cosine"]
-        | Literal["euclidean"]
-        | Literal["euclidean_l2"] = "cosine",
+        distance: Literal["cosine", "euclidean", "euclidean_l2"] = "cosine",
     ) -> float:
         model_name = self.value
         distance_metric = distance

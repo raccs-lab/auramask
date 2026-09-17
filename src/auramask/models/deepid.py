@@ -1,7 +1,8 @@
-from keras import Model, utils, layers, backend, ops
 import os
 
-WEIGHTS_PATH = "https://huggingface.co/logasja/DeepID/resolve/main/" "model.weights.h5"
+from keras import Model, backend, layers, ops, utils
+
+WEIGHTS_PATH = "https://huggingface.co/logasja/DeepID/resolve/main/model.weights.h5"
 
 
 def preprocess_input(x):

@@ -1,4 +1,5 @@
-from keras import Sequential, ops, layers, activations
+from keras import Sequential, activations, layers, ops
+
 from auramask.layers.PaddedConv2D import PaddedConv2D
 
 

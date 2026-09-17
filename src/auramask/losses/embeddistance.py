@@ -1,6 +1,8 @@
 # Imports
-from typing import Callable
-from keras import ops, Loss, KerasTensor
+from collections.abc import Callable
+
+from keras import KerasTensor, Loss, ops
+
 from auramask.models.face_embeddings import FaceEmbedEnum
 from auramask.utils.distance import cosine_distance, cosine_similarity
 

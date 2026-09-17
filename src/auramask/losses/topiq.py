@@ -1,4 +1,4 @@
-from keras import Loss, ops, backend
+from keras import Loss, backend, ops
 
 
 class TopIQFR(Loss):

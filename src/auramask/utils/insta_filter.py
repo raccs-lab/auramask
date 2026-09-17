@@ -1,6 +1,7 @@
 from enum import Enum
-import pilgram2 as pilgram
+
 import numpy as np
+import pilgram2 as pilgram
 from albumentations import CLAHE
 from keras.utils import array_to_img, img_to_array
 

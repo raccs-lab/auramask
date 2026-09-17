@@ -1,6 +1,7 @@
 from keras import metrics
-from auramask.models.lpips import LPIPS
+
 from auramask.metrics.pyiqa import IQAMetric
+from auramask.models.lpips import LPIPS
 
 
 class PerceptualSimilarity(metrics.MeanMetricWrapper):

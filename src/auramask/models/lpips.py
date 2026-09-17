@@ -1,5 +1,6 @@
 from typing import Literal
-from keras import Model, Layer, ops, saving, utils, layers, backend
+
+from keras import Layer, Model, backend, layers, ops, saving, utils
 
 
 class WeightLayer(Layer):
@@ -39,7 +40,7 @@ class LPIPS(Model):
 
     def __init__(
         self,
-        backbone: Literal["alex"] | Literal["vgg"] | Literal["squeeze"] = "alex",
+        backbone: Literal["alex", "vgg", "squeeze"] = "alex",
         spatial=False,
         patch_size=64,
         name="PerceptualSimilarity",
@@ -52,8 +53,9 @@ class LPIPS(Model):
 
         if backend.backend() == "tensorflow":
             mdl_path = utils.get_file(
-                origin="https://github.com/cmu-spuds/lpips_conversion/releases/download/keras/lpips_%s%s.keras"
-                % (backbone, "spatial" if spatial else ""),
+                origin="https://github.com/cmu-spuds/lpips_conversion/releases/download/keras/lpips_{}{}.keras".format(
+                    backbone, "spatial" if spatial else ""
+                ),
                 cache_subdir="models",
             )
 
@@ -97,5 +99,5 @@ class LPIPS(Model):
                 y_true = ops.transpose(y_true, [0, 3, 1, 2])
             diff = self.net.forward(y_pred, y_true, normalize=True)
         else:
-            NotImplementedError("This backend is not supported")
+            raise NotImplementedError("This backend is not supported")
         return ops.reshape(diff, (shape[0], -1))

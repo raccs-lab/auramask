@@ -1,5 +1,9 @@
-from typing import Any, Callable
-from keras import ops, backend, Model, metrics as m
+from collections.abc import Callable
+from typing import Any
+
+from keras import Model, backend, ops
+from keras import metrics as m
+
 from auramask.losses.embeddistance import FaceEmbeddingLoss
 from auramask.losses.zero_dce import IlluminationSmoothnessLoss
 

@@ -1,12 +1,14 @@
+import json
 import os
+from argparse import ArgumentParser, BooleanOptionalAction, FileType, Namespace
+from ast import literal_eval
+
 import keras
-from keras.src.utils import file_utils
 import wandb
+from keras.src.utils import file_utils
+
 import auramask
 from auramask import utils as aurautils
-from argparse import ArgumentParser, FileType, BooleanOptionalAction, Namespace
-import json
-from ast import literal_eval
 
 # Global hparams object
 keras.config.disable_traceback_filtering()
@@ -315,12 +317,12 @@ def handle_environment_config() -> dict:
     cfg_mod: dict = literal_eval(os.getenv("AURAMASK_CONFIG", "{}"))
     for key, val in cfg_mod.items():
         if isinstance(val, str) and val.lower() in ["true", "false"]:
-            cfg_mod[key] = True if val.lower() == "true" else False
+            cfg_mod[key] = val.lower() == "true"
     return cfg_mod
 
 
 def initialize_model(hparams: dict):
-    losses, losses_w, losses_t, metrics = initialize_loss(hparams)
+    losses, losses_w, _losses_t, metrics = initialize_loss(hparams)
 
     adaptive_callback = []
 

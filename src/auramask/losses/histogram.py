@@ -1,4 +1,4 @@
-from keras import ops, Loss, KerasTensor, backend, losses
+from keras import KerasTensor, Loss, backend, losses, ops
 
 
 class HistogramMatchingLoss(Loss):

@@ -1,14 +1,15 @@
-from keras import Model, utils, layers, backend, ops
-from keras.src.applications.imagenet_utils import obtain_input_shape
 import os
 from functools import partial
 
+from keras import Model, backend, layers, ops, utils
+from keras.src.applications.imagenet_utils import obtain_input_shape
+
 WEIGHTS_PATH_128 = (
-    "https://huggingface.co/logasja/FaceNet/resolve/main/" "model.weights.h5"
+    "https://huggingface.co/logasja/FaceNet/resolve/main/model.weights.h5"
 )
 
 WEIGHTS_PATH_512 = (
-    "https://huggingface.co/logasja/FaceNet512/resolve/main/" "model.weights.h5"
+    "https://huggingface.co/logasja/FaceNet512/resolve/main/model.weights.h5"
 )
 
 
@@ -119,7 +120,7 @@ def _generate_layer_name(name, branch_idx=None, prefix=None):
     if prefix is None:
         return None
     if branch_idx is None:
-        return "_".join((prefix, name))
+        return f"{prefix}_{name}"
     return "_".join((prefix, "Branch", str(branch_idx), name))
 
 

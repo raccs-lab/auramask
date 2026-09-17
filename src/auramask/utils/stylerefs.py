@@ -1,6 +1,7 @@
 import enum
-import keras
 import os
+
+import keras
 
 IPFS_GATEWAY = "https://ipfs.meekoracc.com/ipfs/"
 
@@ -117,11 +118,11 @@ class StyleRefs(enum.Enum):
     def get_img(self):
         if self.value["source"] == "url":
             style_reference_image_path = keras.utils.get_file(
-                "%s.jpg" % self.name, self.value["url"], cache_subdir="style"
+                f"{self.name}.jpg", self.value["url"], cache_subdir="style"
             )
         elif self.value["source"] == "ipfs":
             style_reference_image_path = keras.utils.get_file(
-                "%s.jpg" % self.name,
+                f"{self.name}.jpg",
                 os.path.join(IPFS_GATEWAY, self.value["cid"]),
                 cache_subdir="style",
             )
