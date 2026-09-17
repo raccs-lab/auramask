@@ -1,13 +1,17 @@
-from enum import Enum
 import os
-from typing import Callable, TypedDict
-from datasets import load_dataset, Dataset
-from keras import backend as K, utils
-from auramask.utils import preprocessing
+from collections.abc import Callable
+from enum import Enum
 from os import cpu_count
+from typing import TypedDict
+
 import numpy as np
 from albumentations import CLAHE
+from datasets import Dataset, load_dataset
+from keras import backend as K
+from keras import utils
 from PIL import Image
+
+from auramask.utils import preprocessing
 
 
 class DatasetEnum(Enum):
@@ -84,7 +88,7 @@ class DatasetEnum(Enum):
             # Determine if desired output is a referenced output or the original image
             if len(cols) > 1:
                 y = np.stack([ex[cols[1]] for ex in examples], dtype="float32")
-            elif "target" in examples[0].keys():
+            elif "target" in examples[0]:
                 y = np.stack([ex["target"] for ex in examples], dtype="float32")
             else:
                 y = np.copy(x)  # Separate out target
@@ -93,7 +97,7 @@ class DatasetEnum(Enum):
             # Determine if desired output is a referenced output or the original image
             if len(cols) > 1:
                 y = np.stack(examples[cols[1]], dtype="float32")
-            elif "target" in examples.keys():
+            elif "target" in examples:
                 y = np.stack(examples["target"], dtype="float32")
             else:
                 y = np.copy(x)  # Separate out target
@@ -114,24 +118,21 @@ class DatasetEnum(Enum):
         if isinstance(examples, np.ndarray):
             examples = {"image": np.astype(examples, np.uint8)}
         elif isinstance(examples, dict):
-            try:
-                assert "image" in examples.keys()
-                if isinstance(examples["image"], list):
-                    if isinstance(examples["image"][0], Image.Image):
-                        examples["image"] = np.stack(
-                            [
-                                utils.img_to_array(im, dtype="uint8")
-                                for im in examples["image"]
-                            ]
-                        )
-                elif examples["image"].dtype != np.uint8:
-                    examples["image"] = np.astype(examples["image"], np.uint8)
-            except Exception as e:
-                raise e
+            assert "image" in examples
+            if isinstance(examples["image"], list):
+                if isinstance(examples["image"][0], Image.Image):
+                    examples["image"] = np.stack(
+                        [
+                            utils.img_to_array(im, dtype="uint8")
+                            for im in examples["image"]
+                        ]
+                    )
+            elif examples["image"].dtype != np.uint8:
+                examples["image"] = np.astype(examples["image"], np.uint8)
         elif isinstance(examples, list):
-            raise ValueError(f"Format {examples} is not supported.")
+            raise TypeError(f"Format {examples} is not supported.")
         else:
-            raise ValueError(f"Format {type(examples)} is not supported.")
+            raise TypeError(f"Format {type(examples)} is not supported.")
 
         return examples
 
@@ -204,7 +205,7 @@ class DatasetEnum(Enum):
                 examples = DatasetEnum.data_collater(
                     examples, {"w": dims[0], "h": dims[1]}
                 )
-                if "target" not in examples.keys():
+                if "target" not in examples:
                     examples["target"] = np.copy(examples["image"])
                 return examples
 

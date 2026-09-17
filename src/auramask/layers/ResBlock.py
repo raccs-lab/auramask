@@ -1,25 +1,30 @@
+from collections.abc import Callable
+from typing import AnyStr
+
 from keras import (
-    layers,
     activations,
-    regularizers,
     constraints,
     initializers,
+    layers,
+    regularizers,
     saving,
+)
+from keras import (
     backend as K,
 )
-from typing import Tuple, List, Union, AnyStr, Callable, Dict, Optional, Type
-from keras.src.utils.argument_validation import standardize_padding, standardize_tuple
 from keras.src.backend import standardize_data_format
-from keras.src.ops.operation_utils import compute_conv_output_shape
 from keras.src.backend.common.backend_utils import compute_conv_transpose_output_shape
+from keras.src.ops.operation_utils import compute_conv_output_shape
+from keras.src.utils.argument_validation import standardize_padding, standardize_tuple
+
 from auramask.layers import Conv1DTranspose
 
-ConvND = Union[layers.Conv1D, layers.Conv2D, layers.Conv3D]
+ConvND = layers.Conv1D | layers.Conv2D | layers.Conv3D
 
 
-def get_conv_layer_type(rank: int) -> Type[ConvND]:
+def get_conv_layer_type(rank: int) -> type[ConvND]:
     if rank not in (1, 2, 3):
-        raise ValueError("Rank must either be 1, 2 or 3. Received {}.".format(rank))
+        raise ValueError(f"Rank must either be 1, 2 or 3. Received {rank}.")
     conv_layer_types = [None, layers.Conv1D, layers.Conv2D, layers.Conv3D]
     return conv_layer_types[rank]
 
@@ -28,7 +33,7 @@ def get_conv_layer_type(rank: int) -> Type[ConvND]:
 @saving.register_keras_serializable("auramask.layers.ResBlock")
 class ResidualMultiplier(layers.Layer):
     def __init__(self, initial_value: float, **kwargs):
-        super(ResidualMultiplier, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.initial_value = initial_value
         self.multiplier = None
 
@@ -47,7 +52,7 @@ class ResidualMultiplier(layers.Layer):
         return input_signature
 
     def get_config(self):
-        base_config = super(ResidualMultiplier, self).get_config()
+        base_config = super().get_config()
         config = {
             **base_config,
             "initial_value": self.initial_value,
@@ -58,7 +63,7 @@ class ResidualMultiplier(layers.Layer):
 @saving.register_keras_serializable("auramask.layers.ResBlock")
 class ResidualBias(layers.Layer):
     def __init__(self, **kwargs):
-        super(ResidualBias, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.bias = None
 
     def build(self, input_shape):
@@ -93,29 +98,27 @@ class ResBasicBlockND(layers.Layer):
         rank: int,
         filters: int,
         depth: int,
-        kernel_size: Union[int, Tuple, List],
-        strides: Union[int, Tuple, List],
+        kernel_size: int | tuple | list,
+        strides: int | tuple | list,
         padding: str,
-        data_format: Optional[AnyStr],
-        dilation_rate: Union[int, Tuple, List],
-        kernel_regularizer: Optional[Union[Dict, AnyStr, Callable]],
-        bias_regularizer: Optional[Union[Dict, AnyStr, Callable]],
-        activity_regularizer: Optional[Union[Dict, AnyStr, Callable]],
-        kernel_constraint: Optional[Union[Dict, AnyStr, Callable]],
-        bias_constraint: Optional[Union[Dict, AnyStr, Callable]],
+        data_format: AnyStr | None,
+        dilation_rate: int | tuple | list,
+        kernel_regularizer: dict | AnyStr | Callable | None,
+        bias_regularizer: dict | AnyStr | Callable | None,
+        activity_regularizer: dict | AnyStr | Callable | None,
+        kernel_constraint: dict | AnyStr | Callable | None,
+        bias_constraint: dict | AnyStr | Callable | None,
         **kwargs,
     ):
         # region Check parameters
         if rank not in (1, 2, 3):
-            raise ValueError("Rank must either be 1, 2 or 3. Received {}.".format(rank))
+            raise ValueError(f"Rank must either be 1, 2 or 3. Received {rank}.")
 
         if depth <= 0:
-            raise ValueError(
-                "Depth must be strictly positive. Received {}.".format(depth)
-            )
+            raise ValueError(f"Depth must be strictly positive. Received {depth}.")
         # endregion
 
-        super(ResBasicBlockND, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.rank = rank
         self.filters = filters
         self.depth = depth
@@ -134,8 +137,8 @@ class ResBasicBlockND(layers.Layer):
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
 
-        self.conv_layers: List[layers.Layer] = []
-        self.projection_layer: Optional[layers.Layer] = None
+        self.conv_layers: list[layers.Layer] = []
+        self.projection_layer: layers.Layer | None = None
         self.residual_multiplier = None
 
         self.input_spec = layers.InputSpec(ndim=self.rank + 2)
@@ -214,8 +217,8 @@ class ResBasicBlockND(layers.Layer):
                     space[i],
                     self.kernel_size[i],
                     padding=self.padding,
-                    stride=self.strides[i],
-                    dilation=self.dilation_rate[i],
+                    strides=self.strides[i],
+                    dilation_rate=self.dilation_rate[i],
                 )
                 new_space.append(new_dim)
             return tuple(new_space)
@@ -228,7 +231,7 @@ class ResBasicBlockND(layers.Layer):
             )
 
     @property
-    def conv_layer_type(self) -> Type[ConvND]:
+    def conv_layer_type(self) -> type[ConvND]:
         return get_conv_layer_type(self.rank)
 
     @property
@@ -262,7 +265,7 @@ class ResBasicBlockND(layers.Layer):
             "kernel_constraint": constraints.serialize(self.kernel_constraint),
             "bias_constraint": constraints.serialize(self.bias_constraint),
         }
-        base_config = super(ResBasicBlockND, self).get_config()
+        base_config = super().get_config()
         return {**base_config, **config}
 
     def compute_output_signature(self, input_signature):
@@ -289,7 +292,7 @@ class ResBasicBlock1D(ResBasicBlockND):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBasicBlock1D, self).__init__(
+        super().__init__(
             rank=1,
             filters=filters,
             depth=depth,
@@ -308,7 +311,7 @@ class ResBasicBlock1D(ResBasicBlockND):
         )
 
     def get_config(self):
-        config = super(ResBasicBlock1D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -331,7 +334,7 @@ class ResBasicBlock2D(ResBasicBlockND):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBasicBlock2D, self).__init__(
+        super().__init__(
             rank=2,
             filters=filters,
             depth=depth,
@@ -349,7 +352,7 @@ class ResBasicBlock2D(ResBasicBlockND):
         )
 
     def get_config(self):
-        config = super(ResBasicBlock2D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -372,7 +375,7 @@ class ResBasicBlock3D(ResBasicBlockND):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBasicBlock3D, self).__init__(
+        super().__init__(
             rank=3,
             filters=filters,
             depth=depth,
@@ -390,7 +393,7 @@ class ResBasicBlock3D(ResBasicBlockND):
         )
 
     def get_config(self):
-        config = super(ResBasicBlock3D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -401,7 +404,7 @@ class ResBasicBlock3D(ResBasicBlockND):
 @saving.register_keras_serializable("auramask.layers.ResBlock")
 class ResBasicBlockNDTranspose(ResBasicBlockND):
     @property
-    def conv_layer_type(self) -> Type[ConvND]:
+    def conv_layer_type(self) -> type[ConvND]:
         conv_layer_types = [
             None,
             Conv1DTranspose,
@@ -442,7 +445,7 @@ class ResBasicBlock1DTranspose(ResBasicBlockNDTranspose):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBasicBlock1DTranspose, self).__init__(
+        super().__init__(
             rank=1,
             filters=filters,
             depth=depth,
@@ -461,7 +464,7 @@ class ResBasicBlock1DTranspose(ResBasicBlockNDTranspose):
         self._padding = padding
 
     def get_config(self):
-        config = super(ResBasicBlock1DTranspose, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -483,7 +486,7 @@ class ResBasicBlock2DTranspose(ResBasicBlockNDTranspose):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBasicBlock2DTranspose, self).__init__(
+        super().__init__(
             rank=2,
             filters=filters,
             depth=depth,
@@ -501,7 +504,7 @@ class ResBasicBlock2DTranspose(ResBasicBlockNDTranspose):
         )
 
     def get_config(self):
-        config = super(ResBasicBlock2DTranspose, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -523,7 +526,7 @@ class ResBasicBlock3DTranspose(ResBasicBlockNDTranspose):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBasicBlock3DTranspose, self).__init__(
+        super().__init__(
             rank=3,
             filters=filters,
             depth=depth,
@@ -541,7 +544,7 @@ class ResBasicBlock3DTranspose(ResBasicBlockNDTranspose):
         )
 
     def get_config(self):
-        config = super(ResBasicBlock3DTranspose, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -560,30 +563,28 @@ class ResBlockND(layers.Layer):
         filters: int,
         basic_block_count=1,
         basic_block_depth=1,
-        kernel_size: Union[int, Tuple, List] = 3,
-        strides: Union[int, Tuple, List] = 1,
+        kernel_size: int | tuple | list = 3,
+        strides: int | tuple | list = 1,
         padding="same",
-        data_format: AnyStr = None,
-        dilation_rate: Union[int, Tuple, List] = 1,
-        activation: Union[None, AnyStr, Callable] = "linear",
-        kernel_regularizer: Union[Dict, AnyStr, Callable] = None,
-        bias_regularizer: Union[Dict, AnyStr, Callable] = None,
-        activity_regularizer: Union[Dict, AnyStr, Callable] = None,
-        kernel_constraint: Union[Dict, AnyStr, Callable] = None,
-        bias_constraint: Union[Dict, AnyStr, Callable] = None,
+        data_format: AnyStr | None = None,
+        dilation_rate: int | tuple | list = 1,
+        activation: None | AnyStr | Callable = "linear",
+        kernel_regularizer: dict | AnyStr | Callable | None = None,
+        bias_regularizer: dict | AnyStr | Callable | None = None,
+        activity_regularizer: dict | AnyStr | Callable | None = None,
+        kernel_constraint: dict | AnyStr | Callable | None = None,
+        bias_constraint: dict | AnyStr | Callable | None = None,
         **kwargs,
     ):
         if rank not in [1, 2, 3]:
-            raise ValueError("`rank` must be in [1, 2, 3]. Got {}".format(rank))
+            raise ValueError(f"`rank` must be in [1, 2, 3]. Got {rank}")
 
         if not isinstance(basic_block_count, int) or (basic_block_count <= 0):
             raise ValueError(
-                "`basic_block_count` must be a strictly positive integer. Got {}".format(
-                    basic_block_count
-                )
+                f"`basic_block_count` must be a strictly positive integer. Got {basic_block_count}"
             )
 
-        super(ResBlockND, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.rank = rank
         self.filters = filters
         self.basic_block_count = basic_block_count
@@ -603,7 +604,7 @@ class ResBlockND(layers.Layer):
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
 
-        self.basic_blocks: List[ResBasicBlockND] = []
+        self.basic_blocks: list[ResBasicBlockND] = []
 
         self.input_spec = layers.InputSpec(ndim=self.rank + 2)
         self.init_layers()
@@ -632,7 +633,7 @@ class ResBlockND(layers.Layer):
         self.input_spec = layers.InputSpec(
             ndim=self.rank + 2, axes={self.channel_axis: input_shape[self.channel_axis]}
         )
-        super(ResBlockND, self).build(input_shape)
+        super().build(input_shape)
 
     def call(self, inputs, **kwargs):
         outputs = inputs
@@ -688,7 +689,7 @@ class ResBlockND(layers.Layer):
             "bias_constraint": constraints.serialize(self.bias_constraint),
         }
 
-        base_config = super(ResBlockND, self).get_config()
+        base_config = super().get_config()
         return {**base_config, **config}
 
     def compute_output_signature(self, input_signature):
@@ -715,7 +716,7 @@ class ResBlock1D(ResBlockND):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBlock1D, self).__init__(
+        super().__init__(
             rank=1,
             filters=filters,
             basic_block_count=basic_block_count,
@@ -735,7 +736,7 @@ class ResBlock1D(ResBlockND):
         )
 
     def get_config(self):
-        config = super(ResBlock1D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -759,7 +760,7 @@ class ResBlock2D(ResBlockND):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBlock2D, self).__init__(
+        super().__init__(
             rank=2,
             filters=filters,
             basic_block_count=basic_block_count,
@@ -778,7 +779,7 @@ class ResBlock2D(ResBlockND):
         )
 
     def get_config(self):
-        config = super(ResBlock2D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -802,7 +803,7 @@ class ResBlock3D(ResBlockND):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBlock3D, self).__init__(
+        super().__init__(
             rank=3,
             filters=filters,
             basic_block_count=basic_block_count,
@@ -821,7 +822,7 @@ class ResBlock3D(ResBlockND):
         )
 
     def get_config(self):
-        config = super(ResBlock3D, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -880,7 +881,7 @@ class ResBlock1DTranspose(ResBlockNDTranspose):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBlock1DTranspose, self).__init__(
+        super().__init__(
             rank=1,
             filters=filters,
             basic_block_count=basic_block_count,
@@ -899,7 +900,7 @@ class ResBlock1DTranspose(ResBlockNDTranspose):
         )
 
     def get_config(self):
-        config = super(ResBlock1DTranspose, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -923,7 +924,7 @@ class ResBlock2DTranspose(ResBlockNDTranspose):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBlock2DTranspose, self).__init__(
+        super().__init__(
             rank=2,
             filters=filters,
             basic_block_count=basic_block_count,
@@ -942,7 +943,7 @@ class ResBlock2DTranspose(ResBlockNDTranspose):
         )
 
     def get_config(self):
-        config = super(ResBlock2DTranspose, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 
@@ -966,7 +967,7 @@ class ResBlock3DTranspose(ResBlockNDTranspose):
         bias_constraint=None,
         **kwargs,
     ):
-        super(ResBlock3DTranspose, self).__init__(
+        super().__init__(
             rank=3,
             filters=filters,
             basic_block_count=basic_block_count,
@@ -985,7 +986,7 @@ class ResBlock3DTranspose(ResBlockNDTranspose):
         )
 
     def get_config(self):
-        config = super(ResBlock3DTranspose, self).get_config()
+        config = super().get_config()
         config.pop("rank")
         return config
 

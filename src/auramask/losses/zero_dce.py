@@ -1,5 +1,6 @@
-from keras import Loss, ops, KerasTensor, backend as K
-from typing import Optional
+from keras import KerasTensor, Loss, ops
+from keras import backend as K
+
 # Implementations pulled from https://github.com/keras-team/keras-io/blob/master/examples/vision/zero_dce.py
 
 """
@@ -240,9 +241,7 @@ class SpatialConsistencyLoss(Loss):
 
 
 class ZeroDCEEnsemble(Loss):
-    def __init__(
-        self, weights: Optional[list] = None, name="ZeroDCE Ensemble", **kwargs
-    ):
+    def __init__(self, weights: list | None = None, name="ZeroDCE Ensemble", **kwargs):
         super().__init__(name=name, **kwargs)
 
         self.losses: list[Loss] = [

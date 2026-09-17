@@ -23,6 +23,7 @@ labels: [bug]
 <!-- Paste minimal code snippet here. If > 100 lines, link to a repository or snippet. -->
 ```python
 import auramask
+
 ...
 ```
 

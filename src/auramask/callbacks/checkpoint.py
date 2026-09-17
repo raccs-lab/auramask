@@ -1,11 +1,10 @@
-from os import PathLike, path
 import string
+from os import PathLike, path
 from typing import Literal
 
 import wandb
-from wandb.sdk.lib import telemetry
-
 from keras import callbacks
+from wandb.sdk.lib import telemetry
 
 
 class AuramaskCheckpoint(callbacks.ModelCheckpoint):
@@ -16,9 +15,9 @@ class AuramaskCheckpoint(callbacks.ModelCheckpoint):
         verbose: int = 0,
         save_best_only: bool = False,
         save_weights_only: bool = False,
-        mode: Literal["auto"] | Literal["min"] | Literal["max"] = "auto",
+        mode: Literal["auto", "min", "max"] = "auto",
         save_freq: int = 1,
-        freq_mode: Literal["batch"] | Literal["epoch"] = "epoch",
+        freq_mode: Literal["batch", "epoch"] = "epoch",
         initial_value_threshold: float | None = None,
         **kwargs,
     ) -> None:

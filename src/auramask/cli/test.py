@@ -1,15 +1,14 @@
 import argparse
 import os
 
-import wandb
+import albumentations as A
 import datasets
-import tqdm
-
 import keras
 import numpy as np
-import albumentations as A
-from auramask import metrics as aura_metrics
+import tqdm
+import wandb
 
+from auramask import metrics as aura_metrics
 from auramask.utils.constants import (
     EnumAction,
     FaceEmbedEnum,
@@ -100,12 +99,12 @@ def load_model() -> keras.Model:
         train_run: wandb.Run = api.run(hparams["run_id"])
         model_artifact = None
         for logged_artifact in train_run.logged_artifacts():
-            if logged_artifact.type == "model":
-                if hparams["version"] in logged_artifact.aliases + [
-                    logged_artifact.version
-                ]:
-                    model_artifact = logged_artifact
-                    break
+            if logged_artifact.type == "model" and (
+                hparams["version"]
+                in logged_artifact.aliases + [logged_artifact.version]
+            ):
+                model_artifact = logged_artifact
+                break
         if not model_artifact:
             raise Exception(
                 "Unable to find an artifact with alias or version {0}".format(
@@ -113,11 +112,8 @@ def load_model() -> keras.Model:
                 )
             )
         logged_weights = None
-        for file in model_artifact.manifest.entries.keys():
-            if "h5" in file:
-                logged_weights = model_artifact.get_entry(file)
-                break
-            elif "keras" in file:
+        for file in model_artifact.manifest.entries:
+            if "h5" in file or "keras" in file:
                 logged_weights = model_artifact.get_entry(file)
                 break
         logged_weights = logged_weights.download()
@@ -322,7 +318,7 @@ def apply_params(hparams: dict):
     wandb.run.config.update(hparams)
 
     for example in (
-        pbar := tqdm.tqdm(
+        _ := tqdm.tqdm(
             ds.iter(batch_size=hparams["batch"]),
             total=int(np.ceil(ds.num_rows / hparams["batch"])),
             position=0,

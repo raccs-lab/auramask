@@ -17,7 +17,7 @@ labels: 'feature request'
 import auramask
 
 # Example of how you expect the API to work
-result = SomeNewMethod(...) 
+result = SomeNewMethod(...)
 # or
 model = SomeNewModel(config={})
 ```

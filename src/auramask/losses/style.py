@@ -1,5 +1,7 @@
-from typing import Callable
-from keras import ops, layers, Loss, Model, applications, backend as K
+from collections.abc import Callable
+
+from keras import Loss, Model, applications, layers, ops
+from keras import backend as K
 
 from auramask.utils.distance import cosine_distance
 from auramask.utils.stylerefs import StyleRefs
@@ -78,7 +80,7 @@ class StyleLoss(Loss):
         if "model_obj" not in globals():
             model_obj = {}
 
-        if "vgg19" not in model_obj.keys():
+        if "vgg19" not in model_obj:
             inp = layers.Input(shape=(None, None, 3))
             x = applications.vgg19.preprocess_input(inp)
             model = applications.VGG19(

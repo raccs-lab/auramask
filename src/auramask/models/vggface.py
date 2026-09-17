@@ -1,16 +1,15 @@
-from keras import Model, utils, layers, backend, ops
+import os
+
+from keras import Model, backend, layers, ops, utils
 from keras.src.applications.imagenet_utils import (
     obtain_input_shape,
     validate_activation,
 )
-import os
 
-WEIGHTS_PATH = (
-    "https://huggingface.co/logasja/VGGFace2/resolve/main/" "model.weights.h5"
-)
+WEIGHTS_PATH = "https://huggingface.co/logasja/VGGFace2/resolve/main/model.weights.h5"
 
 WEIGHTS_PATH_NT = (
-    "https://huggingface.co/logasja/VGGFace2_NT/resolve/main/" "model.weights.h5"
+    "https://huggingface.co/logasja/VGGFace2_NT/resolve/main/model.weights.h5"
 )
 
 

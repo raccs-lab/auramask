@@ -1,9 +1,12 @@
 from argparse import ArgumentParser, BooleanOptionalAction
-from keras.mixed_precision import set_dtype_policy
-from auramask.utils import cli as cli_utils
-from auramask.cli import test as test_cli, train as train_cli
 from random import choice
 from string import ascii_uppercase
+
+from keras.mixed_precision import set_dtype_policy
+
+from auramask.cli import test as test_cli
+from auramask.cli import train as train_cli
+from auramask.utils import cli as cli_utils
 
 
 def configure_parser():

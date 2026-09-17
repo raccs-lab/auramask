@@ -1,11 +1,9 @@
 # Imports
-from keras import metrics, KerasTensor, ops
+from keras import metrics, ops
+
 from auramask.models.face_embeddings import FaceEmbedEnum
-from auramask.utils.distance import (
-    cosine_distance,
-    euclidean_distance,
-    euclidean_l2_distance,
-)
+from auramask.utils.distance import cosine_distance
+
 
 def embedding_validation(y_true, y_pred, embed_net, distance_fn, threshold_value):
     emb_adv = embed_net(y_true, training=False)
@@ -14,12 +12,14 @@ def embedding_validation(y_true, y_pred, embed_net, distance_fn, threshold_value
     validated = ops.less_equal(distance, threshold_value)
     return validated
 
+
 class CosineValidation(metrics.MeanMetricWrapper):
     """Computes the cosine distance of the embeddings for the given model (f) and returns a vector of truth values [0,1] demonstrating if the cosine distance is below the threshold.
 
     Args:
 
     """
+
     def __init__(
         self,
         f: FaceEmbedEnum,

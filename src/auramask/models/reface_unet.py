@@ -1,5 +1,5 @@
-from types import NoneType
-from keras import layers, Model, backend, KerasTensor, utils
+from keras import KerasTensor, Model, backend, layers, utils
+
 from auramask.layers.ResBlock import ResBlock2D, ResBlock2DTranspose
 
 
@@ -8,8 +8,8 @@ def reface_unet(
     E: list[int],
     D: list[int],
     n_labels: int,
-    input_tensor: KerasTensor | NoneType = None,
-    input_shape: tuple | NoneType = None,
+    input_tensor: KerasTensor | None = None,
+    input_shape: tuple | None = None,
     activation="relu",
     output_activation="softmax",
     batch_norm=True,
@@ -49,20 +49,18 @@ def reface_unet(
     channel_axis = 1 if backend.image_data_format() == "channels_first" else 3
 
     if input_tensor is None:
-        img_input = layers.Input(shape=input_shape, name="{}_input".format(name))
+        img_input = layers.Input(shape=input_shape, name=f"{name}_input")
     else:
         if not backend.is_keras_tensor(input_tensor):
             img_input = layers.Input(
-                tensor=input_tensor, shape=input_shape, name="{}_input".format(name)
+                tensor=input_tensor, shape=input_shape, name=f"{name}_input"
             )
         else:
             img_input = input_tensor
 
     if not (len(filter_num) == len(E) == len(D)):
         raise ValueError(
-            "The length of the filter list, E, and D must be equal got {}, {}, {}".format(
-                len(filter_num), len(E), len(D)
-            )
+            f"The length of the filter list, E, and D must be equal got {len(filter_num)}, {len(E)}, {len(D)}"
         )
 
     X_skip = []
@@ -72,7 +70,7 @@ def reface_unet(
     for i, f in enumerate(filter_num):
         if batch_norm:
             X = layers.BatchNormalization(
-                axis=channel_axis, name="{}_down_{}_bn".format(name, i)
+                axis=channel_axis, name=f"{name}_down_{i}_bn"
             )(X)
         X = ResBlock2D(
             f,
@@ -80,7 +78,7 @@ def reface_unet(
             basic_block_count=E[i],
             kernel_regularizer=kernel_reg,
             activation=activation,
-            name="{}_down_{}".format(name, i),
+            name=f"{name}_down_{i}",
         )(X)
         X_skip.append(X)
 
@@ -91,22 +89,22 @@ def reface_unet(
     # Upsampling Levels
     for i, f in enumerate(filter_num):
         if batch_norm:
-            X = layers.BatchNormalization(
-                axis=channel_axis, name="{}_up_{}_bn".format(name, i)
-            )(X)
+            X = layers.BatchNormalization(axis=channel_axis, name=f"{name}_up_{i}_bn")(
+                X
+            )
         X = ResBlock2DTranspose(
-            filter_num[i],
+            f,
             basic_block_depth=2,
             basic_block_count=D[i],
             kernel_regularizer=kernel_reg,
-            name="{}_up_{}".format(name, i),
+            name=f"{name}_up_{i}",
         )(X)
         if len(X_skip) > 0:
             skip_conn = X_skip.pop()
             X = layers.concatenate(
                 [X, skip_conn],
                 axis=channel_axis,
-                name="{}_up_{}_concat".format(name, i),
+                name=f"{name}_up_{i}_concat",
             )
 
     X = layers.Conv2D(
@@ -115,7 +113,7 @@ def reface_unet(
         padding="same",
         use_bias=True,
         kernel_regularizer=kernel_reg,
-        name="{}_out_conv".format(name),
+        name=f"{name}_out_conv",
     )(X)
 
     X = layers.Activation(output_activation)(X)
@@ -132,7 +130,7 @@ def reface_unet(
         outputs=[
             X,
         ],
-        name="{}_model".format(name),
+        name=f"{name}_model",
     )
 
     return model

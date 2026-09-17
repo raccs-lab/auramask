@@ -1,8 +1,7 @@
 import wandb
-from wandb.sdk.lib import telemetry
-
-from keras import preprocessing, ops
+from keras import ops, preprocessing
 from keras.callbacks import Callback
+from wandb.sdk.lib import telemetry
 
 
 class AuramaskCallback(Callback):

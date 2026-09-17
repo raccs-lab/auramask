@@ -1,9 +1,11 @@
 from argparse import ArgumentTypeError
-from pathlib import Path
-from keras.utils import set_random_seed
-from hashlib import sha256
-from os import path as ospath, environ
 from datetime import datetime
+from hashlib import sha256
+from os import environ
+from os import path as ospath
+from pathlib import Path
+
+from keras.utils import set_random_seed
 
 
 def dir_path(path: str) -> str:

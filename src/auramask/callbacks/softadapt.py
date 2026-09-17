@@ -1,5 +1,7 @@
-from keras import ops, backend as K
 from typing import Literal
+
+from keras import backend as K
+from keras import ops
 from softadapt.callbacks import AdaptiveLossCallback
 
 
@@ -8,15 +10,13 @@ class AdaptiveLossCallback(AdaptiveLossCallback):
         self,
         components: list[str],
         weights: list[float],
-        frequency: int | Literal["epoch"] | Literal["batch"] = "epoch",
+        frequency: Literal["epoch", "batch"] | int = "epoch",
         beta: float = 0.1,
-        accuracy_order: int = None,
-        algorithm: Literal["loss-weighted"]
-        | Literal["normalized"]
-        | Literal["base"] = "base",
+        accuracy_order: int | None = None,
+        algorithm: Literal["loss-weighted", "normalized", "base"] = "base",
         calculate_on_validation=False,
         clip_weights: bool = False,
-        backup_dir: str = None,
+        backup_dir: str | None = None,
     ):
         super().__init__(
             components,

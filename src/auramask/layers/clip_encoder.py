@@ -1,5 +1,6 @@
-from keras import ops, layers, models, Variable, activations, backend as K
 import numpy as np
+from keras import Variable, activations, layers, models, ops
+from keras import backend as K
 
 
 class CLIPAttention(layers.Layer):

@@ -1,4 +1,5 @@
-from keras import Loss, ops, backend
+from keras import Loss, backend, ops
+
 from auramask.models.lpips import LPIPS
 
 

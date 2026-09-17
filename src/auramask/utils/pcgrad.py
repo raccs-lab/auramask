@@ -1,7 +1,7 @@
-from typing import Optional
-from keras import ops, random, backend as K, KerasTensor
 import numpy as np
 import torch
+from keras import KerasTensor, ops, random
+from keras import backend as K
 
 
 def __compute_gradients(ys, xs) -> list[KerasTensor]:
@@ -31,7 +31,7 @@ def __compute_gradients(ys, xs) -> list[KerasTensor]:
         raise NotImplementedError()
 
 
-def compute_pc_grads(loss: list, var_list: Optional[list] = None):
+def compute_pc_grads(loss: list, var_list: list | None = None):
     """_summary_
 
     Args:

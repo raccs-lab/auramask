@@ -1,13 +1,14 @@
+from typing import Any, List, Optional, Tuple, Union
+
 from keras import (
-    layers,
     activations,
-    initializers,
-    regularizers,
     constraints,
+    initializers,
+    layers,
     ops,
+    regularizers,
     saving,
 )
-from typing import Union, List, Tuple, Optional, Any
 
 
 @saving.register_keras_serializable("auramask.layers.Conv1DTranspose")

@@ -1,5 +1,7 @@
-from keras import Loss, ops, backend as K, KerasTensor
-from typing import Callable
+from collections.abc import Callable
+
+from keras import KerasTensor, Loss, ops
+from keras import backend as K
 
 
 ### REIMPLEMENTATION OF tensorflow library SSIM in backend agnostic Keras
@@ -135,7 +137,7 @@ def _ssim_per_channel(
         kernel = ops.tile(kernel, repeats=[1, 1, shape1[-1], 1])
     else:
         kernel = ops.tile(kernel, repeats=[1, 1, shape1[-3], 1])
-    
+
     # The correct compensation factor is `1.0 - tf.reduce_sum(tf.square(kernel))`,
     # but to match MATLAB implementation of MS-SSIM, we use 1.0 instead.
     compensation = 1.0
@@ -251,6 +253,7 @@ def ssim(
     # Compute average over color channels.
     return ops.mean(ssim_per_channel, [-1])
 
+
 # @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
 # TODO: Implement depreciation warnings for python versions before and after 3.14
 class DSSIMObjective(Loss):
@@ -318,6 +321,7 @@ class DSSIMObjective(Loss):
         ssim = ops.mean(ops.divide(ops.subtract(1.0, ssim), 2.0))
         return ssim
 
+
 # @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
 # TODO: Implement depreciation warnings for python versions before and after 3.14
 class GRAYSSIMObjective(DSSIMObjective):
@@ -349,6 +353,7 @@ class SSIMC(Loss):
         filter_sigma: Sigma of the gaussian filter (default 1.5)
         max_value: Max value of the output (default 1.0)
     """
+
     def __init__(
         self,
         name="SSIMC",
@@ -367,7 +372,15 @@ class SSIMC(Loss):
         self.filter_sigma = filter_sigma
 
     def call(self, y_true, y_pred):
-        return 1 - ssim(y_true, y_pred, max_val=self.max_value, k1=self.k1, k2=self.k2, kernel_size=self.kernel_size, filter_sigma=self.filter_sigma)
+        return 1 - ssim(
+            y_true,
+            y_pred,
+            max_val=self.max_value,
+            k1=self.k1,
+            k2=self.k2,
+            kernel_size=self.kernel_size,
+            filter_sigma=self.filter_sigma,
+        )
 
 
 # @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
@@ -401,6 +414,7 @@ class IQASSIMC(Loss):
             y_true = ops.moveaxis(y_true, -1, 1)
             y_pred = ops.moveaxis(y_pred, -1, 1)
         return 1 - self.model(ref=y_true, target=y_pred)
+
 
 # @depreciated("This wrapper for the pyiqa metric will be removed in a future version.")
 # TODO: Implement depreciation warnings for python versions before and after 3.14

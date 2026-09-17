@@ -1,4 +1,4 @@
-from keras import metrics, backend, ops
+from keras import backend, metrics, ops
 
 
 def iqa_metric(y_true, y_pred, metric_obj):
